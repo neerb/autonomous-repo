@@ -1,47 +1,32 @@
-# Initialize ORBITAL Repository Structure
+# Intent Document — autonomous-repo
 
-## Desired Outcome
-The autonomous-repo repository transitions from a placeholder to a fully operational ORBITAL-compliant workspace where AI agents can autonomously create, manage, and execute development work through structured orbits. When this orbit completes, the repository will contain all foundational directories, documentation, and tooling necessary for the ORBITAL system to begin accepting and processing intents without manual intervention.
+**Generated:** 2024-01-09
+**Source:** Initial repository state and context analysis
+**Intent Count:** 3
 
-## Constraints
-- Must not modify or delete the existing README.md file
-- Must adhere to ORBITAL specification v0.1 exactly as defined in system documentation
-- Must create only directories and files explicitly required by ORBITAL — no speculative additions
-- Must not introduce any third-party dependencies or external services at this stage
-- Directory structure must support concurrent orbit execution without file conflicts
-- All documentation must be markdown format for universal readability
-- Must not create any code files, build configurations, or application logic (intent-driven only)
+---
 
-## Acceptance Boundaries
+## INT-001: Establish ORBITAL Framework Foundation
 
-### Minimal Acceptable
-- `.orbital/` directory exists with subdirectories: `intents/`, `orbits/`, `context/`, `proposals/`, `docs/`
-- `.orbital/README.md` explains the purpose of each subdirectory
-- `.orbital/docs/` contains at minimum: `ORBITAL_SPEC.md`, `CONTRIBUTING.md`
-- Repository has a `.gitignore` configured to exclude temporary orbit artifacts
+- **outcome:** Repository operates as a fully functional ORBITAL workspace where agents can autonomously create, execute, and verify orbits — demonstrated by successful completion of at least one orbit cycle from intent generation through verification.
+- **constraints:** Must not require manual intervention for standard orbit lifecycle operations; must maintain compatibility with existing `.orbital/` directory structure; must preserve all existing artifacts in `.orbital/artifacts/e8a20852-f52e-47b3-824b-f5438a8cc9f1/`.
+- **acceptance:** Agent can generate intent documents, context packages, proposals, and verification protocols without human intervention; orbit state transitions are logged and traceable; at least one complete orbit executes end-to-end with verifiable outcomes; all artifact templates conform to ORBITAL schema.
+- **trust_tier:** 1 — autonomous (establishing framework infrastructure with no production impact; fully reversible through git)
 
-### Target
-- All directories from minimal acceptance criteria
-- `.orbital/docs/TRUST_TIERS.md` documenting tier definitions and assignment criteria
-- `.orbital/templates/` directory with starter templates for intent documents and orbit logs
-- `.orbital/orbits/` contains `orbit-000-bootstrap.md` documenting this initialization orbit
-- Root README.md updated to include brief explanation of ORBITAL system and link to `.orbital/README.md`
+---
 
-### Aspirational
-- `.orbital/scripts/` directory with validation utilities (e.g., intent schema validator)
-- `.orbital/docs/GLOSSARY.md` defining key ORBITAL terminology
-- GitHub Actions workflow skeleton in `.github/workflows/orbital-ci.yml` for future automation
-- `.orbital/intents/INT-001-bootstrap.md` capturing this initialization as a formal intent artifact
+## INT-002: Documentation and Operational Clarity
 
-## Trust Tier Assignment
-**Tier 1: Autonomous**
+- **outcome:** Repository README and supporting documentation accurately reflect the ORBITAL framework's purpose, capabilities, and usage patterns — enabling both humans and agents to understand the workspace's operational model.
+- **constraints:** Must not expose sensitive implementation details or credentials; must remain concise (README under 500 words); must not duplicate content available in ORBITAL system documentation.
+- **acceptance:** README describes repository purpose and ORBITAL integration; includes navigation guide to `.orbital/` structure; documents trust tier policies; provides examples of intent creation; technical accuracy validated against ORBITAL specification `[inferred: within 48 hours of completion]`.
+- **trust_tier:** 1 — autonomous (documentation changes only; no functional impact; easily reversible)
 
-**Rationale:** This orbit creates only documentation, directory structure, and metadata files with zero impact on application logic, user-facing features, or data. All changes are fully reversible through git revert. The blast radius is contained to repository organization — no runtime systems, external integrations, or sensitive data are touched. The outcome is foundational infrastructure that enables future higher-tier work, but carries no risk of breakage, data loss, or security exposure. Autonomous execution is appropriate because the work is deterministic, well-specified, and isolated from production concerns.
+---
 
-## Dependencies
-- **Existing Repository:** neerb/autonomous-repo must be accessible and have write permissions
-- **ORBITAL Specification:** Access to complete ORBITAL system documentation (provided in context)
-- **Git Version Control:** Repository must support standard git operations (commit, push, branch)
-- **No External Systems:** This orbit requires no APIs, databases, or third-party services
+## INT-003: Agent Testing and Validation Environment
 
-**Prior Orbits:** None — this is orbit-000, the bootstrap orbit that establishes the foundation for all subsequent orbits.
+- **outcome:** Repository serves as a safe testing ground for ORBITAL agent capabilities — validated through execution of diverse intent types across all trust tiers without impacting external systems.
+- **constraints:** Must not create dependencies on external APIs or services without explicit configuration; must not generate costs beyond basic git hosting; must isolate testing artifacts from production-ready outputs; testing activities must not pollute git history with noise commits `[inferred: limit to meaningful checkpoints]`.
+- **acceptance:** Agents successfully execute intents at trust tiers 1-3; orbit logs demonstrate proper phase transitions; verification protocols confirm acceptance criteria validation; no unintended side effects in external systems; test coverage includes success and failure scenarios with documented learnings.
+- **trust_tier:** 2 — supervised (establishes testing patterns that inform future autonomous behavior; requires validation of testing scope boundaries)
