@@ -1,172 +1,240 @@
-# Context Package: Initialize ORBITAL Repository Structure
+# Context Package: ORBITAL Framework Implementation
 
 ## Codebase References
 
-### Existing Files
-- `README.md` — Current repository placeholder, must be preserved and enhanced but not replaced
+### Existing Structure
+- `README.md` — Root repository documentation, currently minimal placeholder requiring enhancement
+- `.orbital/artifacts/e8a20852-f52e-47b3-824b-f5438a8cc9f1/` — Current orbit artifact directory containing:
+  - `intent_document.md` — Defines three intents for framework establishment
+  - `context_package.md` — Previous context generation (this supersedes it)
+  - `proposal_record.md` — Proposal documentation for current orbit
+  - `verification_protocol.md` — Verification criteria and testing approach
 
-### Files to Create
-- `.orbital/README.md` — Entry point documentation for the ORBITAL system within this repository
-- `.orbital/docs/ORBITAL_SPEC.md` — Complete specification reference for ORBITAL v0.1
-- `.orbital/docs/CONTRIBUTING.md` — Contribution guidelines for working within ORBITAL workflow
-- `.orbital/docs/TRUST_TIERS.md` — Trust tier definitions, assignment criteria, and governance
-- `.orbital/docs/GLOSSARY.md` — Terminology reference (intent, orbit, artifact, proposal, etc.)
-- `.orbital/templates/intent-template.md` — Starter template for creating new intent documents
-- `.orbital/templates/orbit-log-template.md` — Starter template for orbit execution logs
-- `.orbital/orbits/orbit-000-bootstrap.md` — Self-documenting log of this initialization orbit
-- `.orbital/intents/INT-001-bootstrap.md` — Formal intent artifact capturing this initialization
-- `.orbital/scripts/validate-intent.sh` — Shell script for basic intent schema validation
-- `.github/workflows/orbital-ci.yml` — GitHub Actions workflow skeleton for future automation
-- `.gitignore` — Git exclusion rules for temporary orbit artifacts
-
-### Directories to Create
-- `.orbital/` — Root directory for all ORBITAL system artifacts
-- `.orbital/intents/` — Storage for validated intent documents
-- `.orbital/orbits/` — Orbit execution logs and metadata
-- `.orbital/context/` — Context packages and architectural documentation
-- `.orbital/proposals/` — Draft intents awaiting validation and acceptance
+### Required Structure (to be created)
+- `.orbital/intents/` — Validated intent document storage
+- `.orbital/orbits/` — Orbit execution logs and state tracking
+- `.orbital/context/` — Context packages for intent execution
+- `.orbital/proposals/` — Draft intents awaiting validation
 - `.orbital/docs/` — System documentation and specifications
-- `.orbital/templates/` — Reusable templates for ORBITAL artifacts
-- `.orbital/scripts/` — Automation and validation utilities
-- `.github/` — GitHub-specific configuration (if not already exists)
-- `.github/workflows/` — CI/CD workflow definitions
+  - `ORBITAL_SPEC.md` — Framework specification reference
+  - `CONTRIBUTING.md` — Contribution guidelines
+  - `TRUST_TIERS.md` — Trust tier definitions and governance
+  - `GLOSSARY.md` — Terminology reference
+- `.orbital/templates/` — Reusable artifact templates
+  - `intent-template.md` — Intent document scaffold
+  - `orbit-log-template.md` — Orbit logging template
+  - `context-package-template.md` — Context generation template
+- `.orbital/scripts/` — Automation utilities
+  - `validate-intent.sh` — Intent schema validation
+  - `orbit-init.sh` — Orbit initialization helper
+- `.github/workflows/` — CI/CD automation
+  - `orbital-ci.yml` — Automated validation and testing
+
+### Configuration Files
+- `.gitignore` — Exclusion rules for temporary artifacts and sensitive data
+- `.orbital/config.yml` — ORBITAL system configuration (trust tier policies, validation rules)
 
 ## Architecture Context
 
-### ORBITAL System Overview
-ORBITAL is an autonomous development system where AI agents execute work through structured units called orbits. Each orbit is triggered by a validated intent document that specifies desired outcomes, constraints, and acceptance criteria. The system operates in four phases per orbit: Context (briefing), Proposal (planning), Execution (implementation), and Review (validation).
+### ORBITAL System Model
+The repository implements the ORBITAL framework as a meta-development system where AI agents execute structured work units (orbits) driven by validated intent documents. The architecture separates process artifacts (in `.orbital/`) from application code (in repository root and conventional directories) to enable concurrent autonomous operations without conflicts.
 
-### Repository Structure Philosophy
-The `.orbital/` directory serves as the system's control plane, isolated from application code to prevent conflicts between meta-work (managing development process) and feature work (actual implementation). This separation enables:
+### Four-Phase Orbit Lifecycle
+1. **Context Phase** — Agent generates situational briefing from intent and repository state
+2. **Proposal Phase** — Agent creates implementation plan with technical approach and risk analysis
+3. **Execution Phase** — Agent implements changes according to proposal and context
+4. **Verification Phase** — Automated and human validation against acceptance criteria
 
-- **Concurrent orbit execution** — multiple agents working on different intents without collision
-- **Audit trail** — complete history of all work performed autonomously
-- **Human oversight** — centralized location for reviewing AI decisions before merge
-- **Trust tier governance** — scaffolding for progressive autonomy based on risk assessment
+### Directory Isolation Strategy
+The `.orbital/` directory acts as the control plane, completely isolated from application logic:
+- **Artifact storage** — Immutable records of every orbit's inputs and outputs
+- **State management** — Tracking orbit progress and completion status
+- **Documentation hub** — Single source of truth for framework operations
+- **Template library** — Standardized scaffolding for consistency
 
-### Data Flow
-1. Human or AI creates intent document in `.orbital/proposals/`
-2. Intent Agent validates and moves to `.orbital/intents/` with unique identifier
-3. Context Agent generates context package in `.orbital/context/`
-4. Orbit begins, logs progress in `.orbital/orbits/orbit-NNN-name.md`
-5. Artifacts (code, docs, configs) created in appropriate repository locations
-6. Review phase validates against intent acceptance criteria
-7. Merge or rollback based on trust tier and validation results
+This separation allows the testing repository to demonstrate ORBITAL capabilities without requiring actual application code, making it ideal for agent training and validation.
 
-### Integration Points
-- **Git workflows** — All ORBITAL operations happen on feature branches named `orbit/NNN-short-name`
-- **GitHub Actions** — Future automation hooks for trust tier enforcement, validation gates, and notification
-- **Documentation site** — `.orbital/docs/` can be published via GitHub Pages or similar for team reference
+### Data Flow Patterns
+```
+Human Intent → Proposal → Validation → Intent Document
+                                            ↓
+Intent Document → Context Package → Proposal Record
+                                            ↓
+Proposal Record → Execution → Artifacts → Verification
+                                            ↓
+Verification → Orbit Log → Merge/Rollback Decision
+```
+
+### Trust Tier Enforcement
+- **Tier 1 (Autonomous)** — Agent executes, commits, and closes orbit independently
+- **Tier 2 (Supervised)** — Agent executes, human reviews before merge
+- **Tier 3 (Collaborative)** — Agent proposes, human implements
+- **Tier 4 (Human-led)** — Agent assists research, human drives decisions
+
+Repository starts with Tier 1-2 intents to establish foundation, progressively enabling higher tiers as patterns prove stable.
 
 ## Pattern Library
 
-### ORBITAL Specification Patterns
+### Artifact Naming Conventions
+Established from existing `.orbital/artifacts/` structure:
 
-#### Intent Document Structure
-Must contain exactly five sections:
-1. **Desired Outcome** — Single paragraph describing the end state
-2. **Constraints** — Bullet list of technical, business, or process limitations
-3. **Acceptance Boundaries** — Three-tier definition (minimal, target, aspirational)
-4. **Trust Tier Assignment** — Tier number with rationale paragraph
-5. **Dependencies** — External systems, prior orbits, team approvals required
+- **Orbit directories:** UUID-based for uniqueness — `e8a20852-f52e-47b3-824b-f5438a8cc9f1/`
+- **Intent identifiers:** `INT-NNN` format with zero-padded sequential numbers
+- **Document names:** Snake_case with descriptive suffixes — `intent_document.md`, `context_package.md`
+- **Orbit references:** `orbit-NNN` format matching intent numbers where applicable
 
-#### Orbit Naming Convention
-Format: `orbit-NNN-short-kebab-name` where NNN is zero-padded sequential number
+### Document Structure Standards
+From existing artifacts:
 
-#### Intent Naming Convention
-Format: `INT-NNN-short-kebab-name.md` where NNN is sequential identifier
+#### Intent Documents
+```markdown
+# Intent Document — [repository name]
+**Generated:** YYYY-MM-DD
+**Source:** [origin context]
+**Intent Count:** N
 
-#### Trust Tier Definitions
-- **Tier 0:** Trivial (typos, comments, documentation)
-- **Tier 1:** Autonomous (low-risk, fully specified, reversible)
-- **Tier 2:** Supervised (requires human review before merge)
-- **Tier 3:** Collaborative (AI proposes, human implements)
-- **Tier 4:** Human-led (AI assists, human drives)
+---
 
-### File Organization Conventions
-- Markdown for all documentation (universal readability, version control friendly)
-- YAML frontmatter for metadata where applicable
-- Relative paths from repository root in all references
-- ISO 8601 timestamps for temporal metadata
+## INT-NNN: [Title]
+- **outcome:** [single paragraph end state]
+- **constraints:** [bullet list of limitations]
+- **acceptance:** [measurable validation criteria]
+- **trust_tier:** [0-4] — [tier name] ([rationale])
+```
 
-### Documentation Style
-- Active voice, present tense for specifications
-- Past tense for orbit logs (describing completed work)
-- Imperative mood for instructions and templates
-- Avoid jargon without glossary definition
+#### Context Packages
+```markdown
+# Context Package: [Intent Title]
+
+## Codebase References
+[specific files and paths]
+
+## Architecture Context
+[system integration and data flow]
+
+## Pattern Library
+[established conventions]
+
+## Prior Orbit References
+[historical context]
+
+## Risk Assessment
+[failure modes and mitigations]
+```
+
+### Markdown Formatting Standards
+- ATX-style headers (`#` prefix, not underlines)
+- Bold for field labels (`**field:**`)
+- Inline code for file paths (`` `path/to/file` ``)
+- Code blocks with language hints for examples
+- ISO 8601 dates (`YYYY-MM-DD`)
+- Bullet lists with `-` not `*` or `1.`
+
+### Git Commit Conventions
+- Commits reference intent and orbit: `feat(INT-NNN): Brief description`
+- Branch naming: `orbit/NNN-short-name`
+- Merge commits preserve orbit history
+- Atomic commits per logical change, not per file
 
 ## Prior Orbit References
 
-**None.** This is `orbit-000`, the bootstrap orbit that establishes the ORBITAL system itself. All subsequent orbits will reference this as the foundational initialization that created the workspace structure.
+**None yet identified.** This context package supports orbit-000, the bootstrap orbit establishing the ORBITAL framework itself. No prior work exists in this repository beyond the initial README placeholder.
+
+### Learning Opportunities
+Once orbit-000 completes, it will serve as the canonical reference for:
+- Framework establishment patterns
+- Directory structure creation approach
+- Documentation generation standards
+- Agent coordination protocols
+
+The orbit-000 log should document decisions, challenges, and refinements that inform subsequent orbits.
 
 ## Risk Assessment
 
-### Directory Structure Conflicts
-**Risk:** Creating `.orbital/` or `.github/` directories that conflict with existing tooling or workflows.
+### Incomplete Framework Implementation
+**Risk:** Core ORBITAL directories or documents missing, preventing future orbit execution.
 
-**Likelihood:** Low — repository is currently minimal with only README.md
-
-**Mitigation:** 
-- Check for existing `.orbital/` or `.github/` before creation
-- If `.github/` exists, only add `workflows/` subdirectory
-- Document any pre-existing structures in orbit log
-
-### Documentation Accuracy
-**Risk:** ORBITAL specification documentation diverges from actual system behavior or becomes outdated.
-
-**Likelihood:** Medium — documentation is static, system evolves
+**Impact:** High — Subsequent intents cannot proceed without foundational structure.
 
 **Mitigation:**
-- Include version identifier (`v0.1`) in all specification documents
-- Add "Last Updated" timestamp to each doc
-- Note in README that `.orbital/docs/ORBITAL_SPEC.md` is the canonical reference
+- Cross-reference all created directories against ORBITAL specification
+- Validate that INT-001 acceptance criteria explicitly list all required components
+- Test framework by attempting to execute a minimal test intent (INT-002 or INT-003)
+- Include verification step confirming each `.orbital/` subdirectory is populated
 
-### Template Completeness
-**Risk:** Templates missing required fields or sections, causing invalid intent documents.
+### Documentation Drift from Specification
+**Risk:** Created documentation describes ORBITAL incorrectly or contradicts canonical spec.
 
-**Likelihood:** Medium — first-time template creation
-
-**Mitigation:**
-- Templates must include all mandatory sections from specification
-- Add inline comments explaining each section's purpose
-- Include validation script that checks intent documents against spec
-
-### Git Ignore Misconfiguration
-**Risk:** `.gitignore` excludes necessary files or includes sensitive temporary artifacts in version control.
-
-**Likelihood:** Low — straightforward configuration
+**Impact:** Medium — Agents and humans operate on false assumptions, causing systematic errors.
 
 **Mitigation:**
-- Only exclude temporary orbit work (e.g., `.orbital/tmp/`, `*.draft.md`)
-- Never exclude validated intents, completed orbit logs, or context packages
-- Test with `git status` after creation to verify behavior
+- Include version identifier in all specification documents (`ORBITAL v0.1`)
+- Link to authoritative sources rather than duplicating spec content
+- Establish `.orbital/docs/ORBITAL_SPEC.md` as single source of truth for this repository
+- Verification protocol must validate documentation accuracy
 
-### Permission and Access Issues
-**Risk:** AI agent lacks write permissions to create directories or commit files.
+### Artifact Organization Confusion
+**Risk:** Inconsistent naming, location, or format of orbit artifacts across executions.
 
-**Likelihood:** Low — assumes proper repository access configured
-
-**Mitigation:**
-- Validate write access before beginning directory creation
-- If permission errors occur, escalate to human for repository settings adjustment
-- Document any permission requirements in `.orbital/README.md`
-
-### Overwrites and Data Loss
-**Risk:** Accidentally overwriting existing README.md or other repository files.
-
-**Likelihood:** Very Low — intent explicitly constrains against modification
+**Impact:** Medium — Difficult to locate prior work, breaks tooling assumptions.
 
 **Mitigation:**
-- Never write to existing files unless explicitly specified in intent
-- Use `git diff` before committing to verify only expected files changed
-- README.md enhancement is append-only (add section, don't replace)
+- Define explicit templates in `.orbital/templates/` directory
+- Document naming conventions in `.orbital/docs/CONTRIBUTING.md`
+- Scripts validate artifact structure before orbit closure
+- Existing UUID-based artifact directory pattern should be codified
 
-### Specification Drift
-**Risk:** Creating structure that doesn't match ORBITAL specification, requiring rework.
+### Trust Tier Misalignment
+**Risk:** Intents assigned incorrect trust tiers, either too restrictive (blocking progress) or too permissive (enabling risky autonomous actions).
 
-**Likelihood:** Low — specification is well-defined and provided in context
+**Impact:** High — System either moves too slowly or creates dangerous changes.
 
 **Mitigation:**
-- Cross-reference every directory and file against specification
-- Include specification version reference in all created documents
-- Orbit log must cite specific spec sections that informed each decision
+- Document trust tier decision criteria in `.orbital/docs/TRUST_TIERS.md`
+- Include rationale with every tier assignment
+- Start conservative (Tier 2) for ambiguous cases
+- Verification protocols must validate tier appropriateness
+
+### Git History Pollution
+**Risk:** Excessive commits during orbit execution create noisy history; failed experiments clutter repository.
+
+**Impact:** Low — Primarily aesthetic, but reduces traceability over time.
+
+**Mitigation:**
+- Orbit branches squash-merged to main after verification
+- Failed orbits documented in orbit log, branch deleted without merge
+- Meaningful commit messages required, not play-by-play narration
+- `.gitignore` excludes temporary working files
+
+### Template Staleness
+**Risk:** Templates in `.orbital/templates/` diverge from actual practice as framework evolves.
+
+**Impact:** Medium — New contributors or agents generate non-conformant artifacts.
+
+**Mitigation:**
+- Templates versioned and dated
+- Periodic review cycles (e.g., every 10 orbits)
+- Template validation scripts catch schema drift
+- Update templates as part of framework enhancement intents
+
+### Access Control Gaps
+**Risk:** Repository lacks protection rules, allowing direct commits to main or deletion of orbit history.
+
+**Impact:** High — Undermines entire ORBITAL governance model.
+
+**Mitigation:**
+- Document recommended branch protection rules in README
+- Note that testing repository may intentionally have relaxed rules
+- Production adoption guidance must include access control requirements
+- Verification protocols cannot enforce this (GitHub settings required)
+
+### Testing Scope Creep (INT-003 specific)
+**Risk:** Agent testing generates excessive artifacts, external dependencies, or cost-incurring operations.
+
+**Impact:** Medium — Repository becomes unwieldy or incurs unexpected charges.
+
+**Mitigation:**
+- INT-003 constraints explicitly prohibit external API usage without configuration
+- Testing artifacts isolated in `.orbital/test/` subdirectory (create if needed)
+- Orbit logs document what was tested and why
+- Regular cleanup of obsolete test artifacts
