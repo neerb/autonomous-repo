@@ -1,22 +1,20 @@
-# Proposal Record — Establish ORBITAL System Foundation
+# Proposal Record: Create Basic Web App Framework with React
 
-**Proposal ID:** PROP-orbit-0-001  
-**Generated:** 2024-12-19  
-**Intent:** INT-001 (orbit-0)  
+**Proposal ID:** PROP-INT-001-1  
+**Generated:** 2024-01-XX  
+**Intent:** INT-001  
 **Context Packages:**
-- Architectural: none (bootstrap orbit)
+- Architectural: None (greenfield)
 - Intent-specific: CTX-INT-001  
-**Trust Tier:** 1 — autonomous
+**Trust Tier:** 2 — supervised (foundational architecture)
 
 ---
 
 ## Interpreted Intent
 
-The repository needs to transition from "has some ORBITAL artifacts" to "is a functional ORBITAL workspace." Right now, orbit-0 has artifacts in various stages of completion, but the system itself isn't documented, validated, or proven to work end-to-end. The intent asks us to finish orbit-0 completely — ensuring all four artifacts follow consistent patterns, are cross-referenced correctly, and collectively demonstrate that the orbit lifecycle (Intent → Context → Proposal → Verification) functions as designed.
+The repository will transform from a static documentation repository into an executable single-page React application. When complete, a developer can clone the repository, run `npm install` and `npm run dev`, and access a functioning web application in their browser. The application will display two distinct pages — a Home page accessible at the root URL (`/`) and a Settings page accessible at `/settings`. Navigation between these pages will occur without full page reloads, demonstrating true SPA behavior. The architecture must be structured such that adding a third route (e.g., `/about`) in a future orbit requires only creating a new page component and adding one route definition, with no refactoring of existing code.
 
-Beyond just completing orbit-0's artifacts, the system needs discoverability. A developer cloning this repository should understand what `.orbital/` is, why these artifacts exist, and how to initiate new orbits. This requires creating foundational documentation that explains the ORBITAL system structure, artifact schemas, and workflow.
-
-The success signal is straightforward: orbit-0 contains all four artifacts with no schema deviations, plus system documentation exists that would allow someone to execute orbit-1 following the same pattern. This establishes both the reference implementation and the operational guide.
+This is not just "getting React running" — it's establishing the architectural patterns, dependency choices, and project structure that will constrain all future development in this repository. The human reviewer must validate that the selected build tool (Vite), routing library (React Router v6), and directory structure align with unstated requirements around deployment targets, team expertise, and maintenance philosophy.
 
 ---
 
@@ -24,70 +22,119 @@ The success signal is straightforward: orbit-0 contains all four artifacts with 
 
 ### Files to Create
 
-**Primary Documentation:**
-- `.orbital/README.md` — system overview explaining the ORBITAL framework, artifact types, directory structure, and workflow for executing orbits
-- `.orbital/docs/artifact-schemas.md` — formal schema definitions for each artifact type (intent_document, context_package, proposal_record, verification_protocol) with required sections and formatting rules
+#### Core Application Files
+- `src/main.jsx` — Application entry point that mounts the React app to the DOM; imports `App.jsx` and renders it into `#root` element
+- `src/App.jsx` — Root component containing `BrowserRouter` and route definitions; orchestrates navigation and page rendering
+- `src/pages/Home.jsx` — Home route component; displays welcome message and description of the application
+- `src/pages/Settings.jsx` — Settings route component; displays placeholder settings interface (distinct from Home in heading and content)
+- `src/components/Navigation.jsx` — Shared navigation component with links to Home and Settings; uses React Router's `Link` component
 
-**Orbit-0 Completion:**
-All four artifacts already exist in `.orbital/artifacts/e8a20852-f52e-47b3-824b-f5438a8cc9f1/` but need validation and potential refinement:
-- `intent_document.md` — verify it follows schema, contains all required sections
-- `context_package.md` — verify against context package schema from agent skill definition
-- `proposal_record.md` — this document (verify completeness)
-- `verification_protocol.md` — ensure it maps acceptance criteria to validation steps
+#### Configuration & Build Files
+- `package.json` — Project manifest with React 18.3, React Router 6.22, and Vite 5.x dependencies; includes `dev`, `build`, and `preview` scripts
+- `vite.config.js` — Vite configuration with React plugin; defines build output directory and development server settings
+- `.gitignore` — Excludes `node_modules/`, `dist/`, `.env*`, and editor-specific files; explicitly preserves `.orbital/` and `README.md`
+- `index.html` — Root HTML template in repository root (Vite convention); includes `#root` div and script tag linking to `src/main.jsx`
+
+#### Styling (Minimal)
+- `src/App.css` — Basic global styles for navigation layout and page structure; ensures navigation is visible and clickable
+- `src/index.css` — CSS reset and base typography styles
 
 ### Files to Modify
-- None — all repository content outside `.orbital/` remains unchanged per constraints
+**None** — Greenfield implementation; `.orbital/` and `README.md` explicitly protected from modification per constraints.
 
 ### Approach
 
-**Phase 1: Documentation (establishes the system)**
-1. Create `.orbital/README.md` as the entry point explaining:
-   - What ORBITAL is (file-based autonomous development framework)
-   - The five-phase orbit lifecycle (Intent → Context → Proposal → Verification → Learning)
-   - Directory structure convention (`.orbital/artifacts/<orbit-id>/<artifact-type>.md`)
-   - How to initiate a new orbit (create UUID directory, start with intent document)
-   - Reference to orbit-0 as canonical example
+Follow the modern React SPA pattern using **Vite** as the build tool and **React Router v6** for client-side routing. Vite provides fast development server startup (<1 second cold start), instant hot module replacement, and minimal configuration. React Router v6 is the ecosystem-standard routing solution with declarative route definitions and type-safe navigation.
 
-2. Create `.orbital/docs/artifact-schemas.md` documenting:
-   - Required sections for each artifact type
-   - Markdown formatting conventions (heading levels, path notation, cross-references)
-   - Metadata front matter format
-   - Schema validation rules
+**Architecture Decision Rationale:**
+- **Vite over Create React App**: CRA is in maintenance mode and has significantly slower HMR; Vite is actively maintained and aligns with current React ecosystem trends
+- **React Router v6 over alternatives**: Industry standard with extensive documentation, wide adoption, and proven stability; TanStack Router is too new, Wouter lacks ecosystem maturity
+- **Functional components with hooks**: Modern React standard post-Hooks API; avoids class component patterns that are no longer recommended
+- **JSX file extensions**: Explicit `.jsx` for React components improves tooling support and file type clarity
 
-**Phase 2: Orbit-0 Validation (proves the system works)**
-1. Audit orbit-0 artifacts against schemas defined in Phase 1
-2. Verify cross-references resolve correctly (e.g., proposal references intent, verification references acceptance criteria)
-3. Confirm naming conventions are followed (lowercase snake_case, exact artifact type names)
-4. Validate markdown structure (heading hierarchy, relative paths, no external dependencies)
+**Project Structure:**
+```
+/
+├── index.html              # Root HTML template
+├── package.json
+├── vite.config.js
+├── .gitignore
+├── src/
+│   ├── main.jsx           # Entry point
+│   ├── App.jsx            # Root component with routes
+│   ├── App.css            # Global layout styles
+│   ├── index.css          # Base styles
+│   ├── components/
+│   │   └── Navigation.jsx # Shared nav component
+│   └── pages/
+│       ├── Home.jsx       # Home route
+│       └── Settings.jsx   # Settings route
+├── .orbital/              # Protected - no modifications
+└── README.md              # Protected - no modifications
+```
 
-**Phase 3: Verification Execution (acceptance gate)**
-1. Execute the verification protocol for orbit-0
-2. Confirm all Tier 1 acceptance criteria are met:
-   - Directory structure documented ✓ (via .orbital/README.md)
-   - Orbit-0 has complete artifacts ✓ (all four present and validated)
-   - Naming pattern is predictable ✓ (demonstrated and documented)
-   - Artifact schemas exist ✓ (via .orbital/docs/artifact-schemas.md)
-3. Document verification results in the verification_protocol.md artifact
+**Routing Implementation:**
+- `BrowserRouter` wraps the entire application in `App.jsx`
+- `Routes` and `Route` components define path-to-component mappings
+- `Navigation` component uses `Link` instead of `<a href>` to prevent full page reloads
+- Both pages import and render `Navigation` for consistent UX
+
+**Styling Approach:**
+Plain CSS with separate files for global and component-specific styles. Minimal styling to satisfy acceptance criteria (visual distinction between routes, functional navigation). Future orbits can migrate to CSS Modules, Tailwind, or styled-components without structural changes.
 
 ### Order of Operations
 
-1. **Create `.orbital/README.md`** — system overview first, establishes context for everything else
-2. **Create `.orbital/docs/artifact-schemas.md`** — formal schemas enable validation in next step
-3. **Validate orbit-0 artifacts** — audit existing artifacts against schemas, make corrections if needed
-4. **Execute verification protocol** — run validation steps, document results
-5. **Commit all changes** — atomic commit with message: "Complete orbit-0: Establish ORBITAL system foundation"
+1. **Initialize project structure**
+   - Create `package.json` with dependencies (React 18.3, React Router 6.22, Vite 5.x)
+   - Create `.gitignore` (must be first to prevent accidental commits of `node_modules/`)
+   - Create `vite.config.js` with React plugin configuration
+
+2. **Install dependencies**
+   - Run `npm install` to populate `node_modules/` and generate `package-lock.json`
+
+3. **Create HTML template and entry point**
+   - Create `index.html` with `#root` div and script reference to `src/main.jsx`
+   - Create `src/main.jsx` that imports `App` and renders to `#root`
+
+4. **Implement routing infrastructure**
+   - Create `src/App.jsx` with `BrowserRouter`, `Routes`, and route definitions
+   - Create `src/components/Navigation.jsx` with `Link` components for Home and Settings
+
+5. **Create page components**
+   - Create `src/pages/Home.jsx` with distinct content (heading, welcome text)
+   - Create `src/pages/Settings.jsx` with distinct content (heading, settings placeholder)
+
+6. **Add minimal styling**
+   - Create `src/index.css` with CSS reset and base typography
+   - Create `src/App.css` with navigation layout and basic page structure
+
+7. **Verify build and development server**
+   - Run `npm run dev` to start development server
+   - Test navigation between routes in browser
+   - Run `npm run build` to verify production build completes
+   - Test production build with `npm run preview`
 
 ### Dependencies
 
-**Internal:**
-- Orbit-0 UUID directory exists: `.orbital/artifacts/e8a20852-f52e-47b3-824b-f5438a8cc9f1/`
-- Four artifact files already present (need validation, not creation from scratch)
-
 **External:**
-- None — purely file operations within git repository
+- Node.js 18.x or 20.x (LTS versions)
+- npm 9.x or 10.x (bundled with Node.js)
+- Modern browser for testing (Chrome 120+, Firefox 121+, Safari 17+, or Edge 120+)
 
-**Blocking:**
-- None — all prerequisites are met
+**NPM Packages:**
+- `react@^18.3.0` — Core React library
+- `react-dom@^18.3.0` — React DOM rendering
+- `react-router-dom@^6.22.0` — Client-side routing
+- `vite@^5.1.0` — Build tool and dev server
+- `@vitejs/plugin-react@^4.2.0` — Vite plugin for React Fast Refresh
+
+**Blockers:**
+- None identified — repository is empty and ready for initialization
+
+**Assumptions:**
+- Developer has Node.js installed locally
+- Repository has no deployment constraints requiring server-side rendering
+- No existing CI/CD pipeline to integrate with (can be added in future orbit)
 
 ---
 
@@ -95,116 +142,133 @@ All four artifacts already exist in `.orbital/artifacts/e8a20852-f52e-47b3-824b-
 
 ### Edge Cases
 
-**Case: Artifact schema validation failures**
-- **Scenario:** Existing orbit-0 artifacts don't conform to schemas defined in documentation
-- **Impact:** Either artifacts need rewriting (costly) or schemas need adjustment (reduces prescriptiveness)
-- **Mitigation:** Define schemas based on actual orbit-0 artifacts (descriptive, not prescriptive initially). Document "as-built" patterns rather than ideal patterns. Future orbits can improve incrementally.
+**Direct URL Access to Routes:**
+- **Risk:** User navigates directly to `https://domain.com/settings` via URL bar; server returns 404 because `/settings` doesn't exist as a file
+- **Mitigation:** Document in proposal that deployment server must be configured to serve `index.html` for all routes (SPA catch-all). For local development, Vite dev server handles this automatically. Include deployment note in README or separate docs.
 
-**Case: Circular documentation references**
-- **Scenario:** `.orbital/README.md` references artifact schemas, schemas reference README for context, both reference orbit-0 which references the docs
-- **Impact:** Confusing navigation, unclear entry point for new users
-- **Mitigation:** Establish clear hierarchy: README is entry point, links to schemas, both reference orbit-0 as example. No upward references from orbit artifacts to system docs.
+**Browser Back/Forward Button Behavior:**
+- **Risk:** Browser history API not properly integrated; back/forward buttons reload page or navigate incorrectly
+- **Mitigation:** React Router's `BrowserRouter` handles browser history API automatically. Verification protocol must test: navigate Home → Settings → browser back button → verify return to Home without reload.
 
-**Case: Incomplete verification execution**
-- **Scenario:** Verification protocol is defined but not actually executed with results documented
-- **Impact:** Orbit-0 appears complete but hasn't been validated against acceptance criteria
-- **Mitigation:** Include verification results section in verification_protocol.md artifact. Check off each criterion with timestamp and outcome.
+**Missing Route Handling:**
+- **Risk:** User navigates to `/invalid-route`; application shows blank page or throws error
+- **Mitigation:** Implementation will not include catch-all 404 route (marked as "stretch goal" in intent acceptance criteria). If user accesses invalid route, React Router renders nothing (blank page). This is acceptable for MVP but should be documented as future enhancement.
 
-### Potential Regressions
+**Concurrent Route Transitions:**
+- **Risk:** User clicks multiple navigation links rapidly; React Router queues transitions incorrectly
+- **Mitigation:** React Router v6 handles this internally; no custom code required. Edge case is already solved by library design.
 
-**Risk: Breaking existing artifact references**
-- **Scenario:** If orbit-0 artifact filenames or content structure changes during validation, external references could break
-- **Impact:** Low — orbit-0 is the first orbit, minimal external references exist
-- **Mitigation:** Preserve existing filenames exactly. Only modify content within files, not file structure.
+### Regressions
 
-**Risk: README.md modification**
-- **Scenario:** Accidentally modifying repository root README.md when creating .orbital/README.md
-- **Impact:** Violates explicit constraint
-- **Mitigation:** Double-check file paths. Root README.md is at `./README.md`, ORBITAL README is at `.orbital/README.md`. Different directories, different purposes.
+**No Existing Behavior to Regress:**
+- Repository has no executable code, only documentation and ORBITAL artifacts
+- Risk of regression is zero for application code
 
-### Security Considerations
+**Protected File Modification:**
+- **Risk:** Implementation accidentally modifies `.orbital/` directory or `README.md`, violating explicit constraints
+- **Mitigation:** Implementation plan explicitly excludes these files. Verification protocol includes `git diff` check to confirm `.orbital/` and `README.md` show no changes. Agent must not open, edit, or move these files.
 
-**Information disclosure:**
-- **Concern:** Orbit artifacts may expose repository structure, technology stack, or development patterns
-- **Assessment:** Repository is public (neerb/autonomous-repo), so no confidential information exposure risk
-- **Mitigation:** None needed for public repository. Future private repositories should audit artifact content before commit.
+### Security
 
-**Path traversal:**
-- **Concern:** Relative paths in artifacts could reference files outside `.orbital/` directory
-- **Assessment:** Low risk — artifacts are documentation, not executable code
-- **Mitigation:** Use repository-root-relative paths consistently (`.orbital/...`, not `../../../...`)
+**Client-Side XSS Exposure:**
+- **Risk:** If future routes render user-generated content without sanitization, XSS attacks are possible
+- **Mitigation:** Current implementation renders only static hardcoded content; no user input or dynamic data. React's default JSX escaping provides protection against XSS. Document in proposal that future orbits introducing dynamic content must sanitize user input.
 
-### Performance Considerations
+**Dependency Vulnerabilities:**
+- **Risk:** React, React Router, or Vite have known security vulnerabilities in selected versions
+- **Mitigation:** Use latest stable versions at time of implementation (React 18.3, React Router 6.22, Vite 5.x). Run `npm audit` after installation to check for known vulnerabilities. Document audit results in verification protocol.
 
-**Repository size:**
-- **Impact:** Two new documentation files add ~5-10 KB total (text-only markdown)
-- **Assessment:** Negligible — well within GitHub repository limits
-- **Mitigation:** None needed
+**Exposed Environment Variables:**
+- **Risk:** If future orbits add environment variables (API keys, secrets), they could be exposed in client-side bundle
+- **Mitigation:** Current implementation has no environment variables. Add `.env*` to `.gitignore` to prevent accidental commit of future env files. Document in proposal that client-side code cannot securely store secrets.
 
-**Git operations:**
-- **Impact:** Single commit with 2-4 modified/created files
-- **Assessment:** Sub-second operation, no performance concerns
-- **Mitigation:** None needed
+### Performance
 
-**Future scalability:**
-- **Impact:** Each orbit adds 4 markdown files. At 100 orbits = 400 files in `.orbital/artifacts/`
-- **Assessment:** Acceptable for years of development. GitHub handles thousands of files per directory without issue
-- **Mitigation:** Monitor directory size. Implement archival strategy (separate branch or repository) if file count exceeds 1000 orbits.
+**Initial Bundle Size:**
+- **Risk:** React + React Router creates ~150KB gzipped bundle; oversized bundle impacts load time on slow connections
+- **Mitigation:** Intent specifies <2 second page load on 3G connection (target state). Vite's code splitting and tree shaking keep bundle minimal. Verification protocol includes bundle size check: production build must be <200KB gzipped for initial route.
+
+**Development Server Startup:**
+- **Risk:** Slow dev server startup frustrates development workflow
+- **Mitigation:** Vite cold starts in <1 second (vs. CRA's 5-10 seconds). Choice of Vite directly addresses this risk.
+
+**Hot Module Replacement Latency:**
+- **Risk:** Slow HMR causes lag between code save and browser update
+- **Mitigation:** Vite's native ESM-based HMR updates in <100ms. Verification protocol confirms HMR works: modify `Home.jsx` text, verify browser updates without full reload.
+
+**Route Transition Performance:**
+- **Risk:** Client-side navigation feels sluggish or janky
+- **Mitigation:** React Router transitions are synchronous and near-instant for static content. No data fetching or heavy computation on route change. Performance issue only arises with future dynamic data loading (out of scope for this orbit).
 
 ---
 
 ## Scope Estimate
 
 ### Orbit Count
-**1 orbit** — completes orbit-0, the bootstrap orbit establishing the ORBITAL system foundation
+**1 orbit** — This proposal encompasses the entire intent in a single orbit.
+
+**Rationale:** All work is sequential and interdependent. Cannot test routing without routes; cannot create routes without routing infrastructure; cannot set up routing without build tool. Splitting into multiple orbits would create artificial checkpoints with no independently valuable deliverable.
 
 ### Complexity Assessment
-**Low to Medium**
+**Medium** — New project initialization with multiple interdependent configuration files and architectural decisions.
 
-**Rationale:**
-- **Low complexity factors:**
-  - No code implementation, only documentation and validation
-  - Artifacts already exist, just need quality assurance and documentation wrapper
-  - No external dependencies or integrations
-  - Changes are isolated to `.orbital/` directory
-  - Fully reversible through git operations
+**Justification:**
+- **Not Low** because: Requires coordinating 4 distinct systems (React, React Router, Vite, npm dependency management). Each has configuration requirements and failure modes. Folder structure and naming conventions establish patterns for all future work.
+- **Not High** because: All components use established libraries with well-documented patterns. No custom algorithms, data transformations, or integration with external services. No state management, authentication, or backend communication. Equivalent to assembling IKEA furniture — many pieces, but clear instructions.
 
-- **Medium complexity factors:**
-  - Requires understanding the full ORBITAL system model to document it correctly
-  - Schema definition must be precise enough to guide future orbits but flexible enough to allow evolution
-  - Validation against acceptance criteria requires judgment about what "complete" means
-  - Sets precedent for all future orbits — mistakes here compound
+**Complexity Breakdown:**
+- **Configuration complexity**: Medium (4 config files with interdependencies)
+- **Component complexity**: Low (two simple page components, one navigation component)
+- **Routing complexity**: Low (two routes with no nested or dynamic segments)
+- **Testing complexity**: Low (manual browser testing, no automated test suite)
 
-### Work Breakdown
+### Work Phases
 
-**Phase 1: Documentation Creation (30-40% of effort)**
-- Draft `.orbital/README.md` — system overview, workflow explanation, orbit-0 reference
-- Draft `.orbital/docs/artifact-schemas.md` — formalize the artifact structure patterns
-- Review and refine documentation for clarity and completeness
+**Phase 1 — Project Initialization (20% of effort)**
+- Create `package.json`, `.gitignore`, `vite.config.js`
+- Run `npm install`
+- Verify `node_modules/` populated and `package-lock.json` generated
 
-**Phase 2: Artifact Validation (30-40% of effort)**
-- Audit orbit-0 `intent_document.md` against schema requirements
-- Audit orbit-0 `context_package.md` against context agent skill definition
-- Audit orbit-0 `proposal_record.md` (this document) for completeness
-- Audit orbit-0 `verification_protocol.md` — ensure it maps to acceptance criteria
-- Make corrections if schema deviations found
+**Phase 2 — Application Scaffolding (30% of effort)**
+- Create `index.html` and `src/main.jsx`
+- Create `src/App.jsx` with routing infrastructure
+- Create directory structure (`src/components/`, `src/pages/`)
 
-**Phase 3: Verification Execution (20-30% of effort)**
-- Execute verification protocol checklist
-- Document results (pass/fail for each criterion)
-- Confirm Tier 1 acceptance boundaries are met
-- Finalize verification artifact with outcomes
+**Phase 3 — Component Implementation (30% of effort)**
+- Implement `Navigation.jsx` with React Router `Link` components
+- Implement `Home.jsx` and `Settings.jsx` with distinct content
+- Wire navigation into page components
 
-### Estimated Duration
-**1-2 hours** for complete implementation including documentation, validation, and verification execution
+**Phase 4 — Styling & Polish (10% of effort)**
+- Add `src/index.css` and `src/App.css`
+- Verify visual distinction between routes
+- Ensure navigation is usable and styled consistently
 
-### Deliverables Checklist
-- [ ] `.orbital/README.md` created and committed
-- [ ] `.orbital/docs/artifact-schemas.md` created and committed
-- [ ] Orbit-0 artifacts validated against schemas
-- [ ] Verification protocol executed with documented results
-- [ ] All Tier 1 acceptance criteria confirmed met
-- [ ] Final commit with message: "Complete orbit-0: Establish ORBITAL system foundation"
+**Phase 5 — Verification (10% of effort)**
+- Start development server, test navigation
+- Run production build, verify output
+- Test browser back/forward buttons
+- Confirm protected files unchanged
+- Run `npm audit` for dependency vulnerabilities
+
+### File Count
+**Total:** 12 files created  
+**Configuration:** 4 (package.json, vite.config.js, .gitignore, index.html)  
+**Source code:** 6 (main.jsx, App.jsx, Navigation.jsx, Home.jsx, Settings.jsx, index.css, App.css)  
+**Generated:** 2 (package-lock.json, node_modules/ directory — not tracked in git)
+
+### Estimated Test Cases
+**Manual browser testing (no automated test suite in this orbit):**
+1. Development server starts without errors
+2. Navigate to `/` (Home route), verify distinct content renders
+3. Navigate to `/settings`, verify distinct content renders
+4. Click navigation link from Home → Settings, verify no page reload (check network tab)
+5. Click navigation link from Settings → Home, verify no page reload
+6. Browser back button from Settings → Home works
+7. Browser forward button from Home → Settings works
+8. Direct URL entry to `/settings` in browser address bar works
+9. Production build completes without errors
+10. Production build preview server serves application correctly
 
 ---
 
@@ -213,11 +277,24 @@ All four artifacts already exist in `.orbital/artifacts/e8a20852-f52e-47b3-824b-
 | Field | Value |
 |-------|-------|
 | Status | pending |
-| Authorized by | (awaiting human review) |
-| Timestamp | (pending authorization) |
+| Authorized by | — |
+| Timestamp | — |
 
 ---
 
 ## Human Modifications
 
 Pending human review.
+
+Human reviewer should validate:
+1. **Vite vs. CRA choice**: Does the team have Vite experience? Are there deployment constraints requiring Webpack?
+2. **React Router v6 vs. alternatives**: Is there a preference for TanStack Router or another routing library?
+3. **Directory structure**: Does `src/pages/` vs. `src/routes/` naming matter for team conventions?
+4. **Styling approach**: Should this use Tailwind, styled-components, or plain CSS from the start?
+5. **Testing strategy**: Should automated tests (Vitest, React Testing Library) be included in this orbit, or deferred?
+
+Human modifications to this proposal will be captured in the table below during review:
+
+| Field | Original | Modified | Reason |
+|-------|----------|----------|--------|
+| — | — | — | — |
