@@ -1,18 +1,16 @@
 # Test Results
 
-**Status:** failed
-**Run ID:** 3cd807d1-5c33-47ce-83bf-932e7810c6ee
-**Job ID:** 13327d16-63c0-4a4a-8974-c9e60a9f0fa8
+**Status:** skipped
+**Stack:** node
+**Run ID:** 7cfadf77-aa2f-4de2-aebc-b064528a6466
+**Job ID:** 11a933be-1df7-4dc4-8ff8-b78e95dbb294
 **Orbit ID:** e8a20852-f52e-47b3-824b-f5438a8cc9f1
-**Timestamp:** 2026-03-12T18:29:53Z
+**Timestamp:** 2026-03-12T19:06:42Z
 
 ## Output
 
 ```
-FAIL	./... [setup failed]
-FAIL
-
-# ./...
-pattern ./...: directory prefix . does not contain main module or its selected dependencies
-
+No build verification available for project stack "node".
+Files detected: [package.json]
+Skipping test execution.
 ```
