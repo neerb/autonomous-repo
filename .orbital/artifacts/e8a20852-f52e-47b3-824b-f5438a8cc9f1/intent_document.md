@@ -1,58 +1,70 @@
-# Establish ORBITAL System Foundation
+# Create Basic Web App Framework with React
 
 ## Desired Outcome
 
-The autonomous-repo repository becomes a fully operational ORBITAL workspace where autonomous development cycles can execute from intent authoring through verification, with all artifacts systematically generated, stored, and versioned. Developers and AI agents can initiate orbits, track progress through lifecycle phases, and retrieve historical context from completed cycles.
+A functioning single-page application exists in the repository with two accessible routes (Home and Settings) that serves as the foundation for future feature development. The application renders successfully in modern browsers, demonstrates client-side navigation without page reloads, and provides a clear structure for adding new routes and components as the project evolves.
 
 ## Constraints
 
-- Must preserve existing repository content (README.md) without modification
-- Must use the `.orbital/artifacts/` directory structure already present
-- Must not introduce dependencies on external services, databases, or cloud infrastructure
-- Must remain compatible with standard git workflows and GitHub repository limits (file size, path length, file count)
-- Must not require custom tooling or runtime environments beyond git and standard file operations
-- Must not implement authentication, access control, or multi-user coordination mechanisms at this stage
+- **Framework Lock:** Must use React as the UI library; no alternative frameworks (Vue, Svelte, Angular) permitted
+- **Route Count:** Exactly two routes required at completion — Home and Settings — no more, no fewer
+- **Browser Compatibility:** Must support current versions of Chrome, Firefox, Safari, and Edge (last 2 major releases)
+- **Repository Integrity:** Must not modify or remove existing `.orbital/` directory structure or `README.md` content
+- **Development Environment:** Solution must be runnable on standard Node.js LTS versions without requiring specialized tooling beyond npm/yarn
+- **No Backend Dependency:** Initial framework must operate entirely client-side; no server-side rendering or API integration required at this stage
+- **Extensibility Requirement:** Architecture must accommodate future route additions without structural refactoring
 
 ## Acceptance Boundaries
 
-### Minimum Viable (Tier 1)
-- `.orbital/artifacts/` directory structure is documented and consistently used
-- At least one orbit (orbit-0) has complete artifacts: intent_document.md, context_package.md, proposal_record.md, verification_protocol.md
-- Artifact file naming follows predictable pattern: `.orbital/artifacts/<orbit-id>/<artifact-type>.md`
-- Each artifact type has a documented template or schema
+**Minimum Viable (Tier 2 Gate):**
+- Application builds without errors using `npm run build` or equivalent
+- Development server starts successfully and serves content on localhost
+- Both `/` (Home) and `/settings` routes render distinct content when accessed directly via URL
+- Navigation between routes functions without full page reload (SPA behavior confirmed)
+- Browser console shows zero critical errors on route access
+- At least one visual difference between Home and Settings routes is observable (text, heading, or component variation)
 
-### Target (Tier 2)
-- Two or more complete orbits exist demonstrating the full cycle
-- Orbit metadata (number, phase, status) is trackable through artifact content or directory structure
-- Cross-references between artifacts (e.g., proposals referencing intents) are resolvable
-- Artifact generation process is documented in repository
+**Target State:**
+- Page load time <2 seconds on 3G connection simulation
+- All routes accessible via browser back/forward buttons
+- Navigation component (nav bar or menu) present and functional on both routes
+- Basic HTML semantics applied (proper heading hierarchy, semantic elements)
+- Responsive layout that adapts to mobile viewport (320px width minimum)
 
-### Stretch (Tier 3)
-- Orbit log or index file provides queryable history of all orbits
-- Learning artifacts from completed orbits inform subsequent orbit context
-- Artifact validation checks ensure schema compliance
+**Stretch (Not Required for Approval):**
+- Route transition animations implemented
+- 404/Not Found route for invalid paths
+- Accessibility score ≥90 on Lighthouse audit
+- Component-level test coverage established
 
 ## Trust Tier Assignment
 
-**Tier 1: Autonomous**
+**Tier 2 — Supervised**
 
-Rationale: This intent establishes foundational repository structure with minimal blast radius. All changes are:
-- Confined to the `.orbital/` directory tree
-- Fully reversible through git operations (revert, reset)
-- Non-breaking to existing repository functionality
-- Free of external dependencies or side effects
-- Self-contained within version control
+**Rationale:** This intent establishes the foundational architecture of the project and introduces external dependencies (React library, build tooling, routing solution) that will constrain all future development. While the blast radius is limited to a greenfield repository with no production users, the decisions made here—choice of build tool (Create React App, Vite, Next.js), routing library (React Router, Wouter, TanStack Router), and project structure—create technical debt that is costly to reverse. The framework selection impacts bundle size, performance characteristics, and developer experience for all subsequent work.
 
-The work involves documentation and file organization rather than executable code, security-sensitive operations, or user-facing functionality. Risk is limited to repository organization clarity, which can be refined iteratively.
+Additionally, the repository will transition from a static README to an executable application, fundamentally changing its nature. This warrants human review of the architectural approach, dependency choices, and structural patterns before implementation proceeds. The human must confirm that the selected tooling aligns with unstated requirements around deployment targets, team familiarity, and long-term maintenance philosophy.
 
 ## Dependencies
 
-### Internal
-- Existing `.orbital/artifacts/` directory structure
-- UUID-based orbit identification scheme (e.g., `e8a20852-f52e-47b3-824b-f5438a8cc9f1`)
+**External:**
+- Node.js runtime environment (LTS version assumed available)
+- npm or yarn package manager
+- React library (version to be determined in Context Package phase)
+- Client-side routing library (React Router or equivalent)
+- Build tooling (bundler and dev server)
 
-### External
-None
+**Internal:**
+- Repository write access to create application files and directories
+- Ability to add `package.json` and dependency management files
+- Assumption that `.gitignore` will be created to exclude `node_modules/` and build artifacts
 
-### Prior Orbits
-None — this is orbit-0, the bootstrap intent for the ORBITAL system itself
+**Blockers:**
+- None identified — repository is empty aside from ORBITAL artifacts and README, providing clean slate for initialization
+
+**Assumed Non-Dependencies:**
+- No backend services or APIs required
+- No database or persistent storage
+- No authentication or user management
+- No third-party integrations or external data sources
+- No CI/CD pipeline (deployment mechanism out of scope for this intent)
