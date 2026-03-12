@@ -1,0 +1,26 @@
+.calculator {
+  max-width: 400px;
+  margin: 2rem auto;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.calculator-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background-color: #ccc;
+}
+
+.calculator-button:nth-child(1) {
+  grid-column: 1 / 3;
+}
+
+.calculator-button:nth-child(17) {
+  grid-column: 1 / 3;
+}
+
+.calculator-button:nth-child(16) {
+  grid-row: 5 / 7;
+}
