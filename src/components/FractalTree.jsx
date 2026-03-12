@@ -1,107 +1,164 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { generateTreeStructure, DEFAULT_CONFIG, calculateBranchColor } from '../utils/fractalAlgorithm.js';
 
-const ANIMATION_CONFIG = {
-  GROWTH_DURATION: 5000,        // ms
-  SWAY_AMPLITUDE: 0.08,         // radians (~4.5 degrees)
-  SWAY_FREQUENCY: 0.5,          // Hz
-  SWAY_DEPTH_MULTIPLIER: 0.15   // tip sway enhancement
-};
-
-export function FractalTree({ branches, canvasWidth, canvasHeight }) {
+/**
+ * FractalTree Component
+ * 
+ * Renders an animated binary tree fractal on HTML5 canvas with two animation phases:
+ * 1. Growth Phase: Tree animates from trunk to full canopy over 4 seconds
+ * 2. Sway Phase: Tree continuously sways with wind-like motion
+ */
+function FractalTree() {
+  // Canvas dimensions
+  const CANVAS_WIDTH = 1000;
+  const CANVAS_HEIGHT = 800;
+  const GROWTH_DURATION = 4000; // 4 seconds in milliseconds
+  
+  // Refs for canvas context and animation frame ID
   const canvasRef = useRef(null);
-  const animationRef = useRef(null);
+  const ctxRef = useRef(null);
+  const animationIdRef = useRef(null);
+  const treeDataRef = useRef(null);
   const startTimeRef = useRef(null);
   
-  const [phase, setPhase] = useState('growth'); // 'growth' | 'sway'
-
+  // Animation state: 'growing', 'swaying'
+  const [animationPhase, setAnimationPhase] = useState('growing');
+  
+  // Initialization effect - runs once on mount
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    let maxDepth = 0;
-    branches.forEach(b => {
-      if (b.depth > maxDepth) maxDepth = b.depth;
+    
+    ctxRef.current = canvas.getContext('2d');
+    
+    // Generate complete tree structure
+    const startX = CANVAS_WIDTH / 2;
+    const startY = CANVAS_HEIGHT - 50;
+    
+    treeDataRef.current = generateTreeStructure({
+      ...DEFAULT_CONFIG,
+      startX,
+      startY
     });
-
-    function animate(timestamp) {
-      if (!startTimeRef.current) startTimeRef.current = timestamp;
-      const elapsed = timestamp - startTimeRef.current;
-
-      // Clear canvas
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-      if (phase === 'growth') {
-        // Growth phase: progressively reveal branches by depth
-        const progress = Math.min(elapsed / ANIMATION_CONFIG.GROWTH_DURATION, 1);
-        const currentMaxDepth = Math.floor(progress * maxDepth);
-
-        branches.forEach(branch => {
-          if (branch.depth <= currentMaxDepth) {
-            drawBranch(ctx, branch, 1.0);
-          } else if (branch.depth === currentMaxDepth + 1) {
-            // Partially draw the next depth level
-            const depthProgress = (progress * maxDepth) - currentMaxDepth;
-            drawBranch(ctx, branch, depthProgress);
-          }
-        });
-
-        if (progress >= 1) {
-          setPhase('sway');
-          startTimeRef.current = timestamp; // Reset timer for sway phase
-        }
-      } else if (phase === 'sway') {
-        // Sway phase: apply sinusoidal rotation to all branches
-        const time = elapsed / 1000; // seconds
-        const swayAngle = Math.sin(time * ANIMATION_CONFIG.SWAY_FREQUENCY * 2 * Math.PI) * ANIMATION_CONFIG.SWAY_AMPLITUDE;
-
-        branches.forEach(branch => {
-          // Calculate depth-based sway multiplier (tips sway more)
-          const depthFactor = 1 + (branch.depth / maxDepth) * ANIMATION_CONFIG.SWAY_DEPTH_MULTIPLIER;
-          const branchSway = swayAngle * depthFactor;
-
-          // Rotate branch around its starting point
-          const length = Math.sqrt(Math.pow(branch.x2 - branch.x1, 2) + Math.pow(branch.y2 - branch.y1, 2));
-          const newAngle = branch.angle + branchSway;
-          const x2 = branch.x1 + length * Math.cos(newAngle);
-          const y2 = branch.y1 + length * Math.sin(newAngle);
-
-          drawBranch(ctx, { ...branch, x2, y2 }, 1.0);
-        });
+  }, []);
+  
+  // Animation loop effect
+  useEffect(() => {
+    if (!ctxRef.current || !treeDataRef.current) return;
+    
+    const ctx = ctxRef.current;
+    const tree = treeDataRef.current;
+    
+    /**
+     * Draw tree during growth phase
+     * Progressively reveals branches based on elapsed time
+     */
+    function drawGrowingTree(ctx, tree, elapsed) {
+      const progress = Math.min(elapsed / GROWTH_DURATION, 1);
+      const visibleCount = Math.floor(tree.branches.length * progress);
+      
+      ctx.beginPath();
+      
+      for (let i = 0; i < visibleCount; i++) {
+        const branch = tree.branches[i];
+        const color = calculateBranchColor(branch.depth, DEFAULT_CONFIG.maxDepth);
+        
+        ctx.strokeStyle = color;
+        ctx.lineWidth = branch.thickness;
+        ctx.lineCap = 'round';
+        
+        ctx.moveTo(Math.round(branch.startX), Math.round(branch.startY));
+        ctx.lineTo(Math.round(branch.endX), Math.round(branch.endY));
+        ctx.stroke();
       }
-
-      animationRef.current = requestAnimationFrame(animate);
     }
-
-    animationRef.current = requestAnimationFrame(animate);
-
+    
+    /**
+     * Draw tree during sway phase
+     * Applies sinusoidal motion with amplitude proportional to depth
+     */
+    function drawSwayingTree(ctx, tree, elapsed) {
+      const swayFrequency = 0.001; // Slow gentle sway
+      const baseAmplitude = 0.05; // Max sway angle in radians (about 3 degrees)
+      
+      tree.branches.forEach((branch) => {
+        // Calculate sway offset (tips move more than trunk)
+        const depthFactor = branch.depth / DEFAULT_CONFIG.maxDepth;
+        const swayAmount = Math.sin(elapsed * swayFrequency) * baseAmplitude * depthFactor;
+        
+        // Apply sway rotation around branch start point
+        ctx.save();
+        ctx.translate(branch.startX, branch.startY);
+        ctx.rotate(swayAmount);
+        ctx.translate(-branch.startX, -branch.startY);
+        
+        // Draw branch
+        const color = calculateBranchColor(branch.depth, DEFAULT_CONFIG.maxDepth);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = branch.thickness;
+        ctx.lineCap = 'round';
+        
+        ctx.beginPath();
+        ctx.moveTo(Math.round(branch.startX), Math.round(branch.startY));
+        ctx.lineTo(Math.round(branch.endX), Math.round(branch.endY));
+        ctx.stroke();
+        
+        ctx.restore();
+      });
+    }
+    
+    function animate(timestamp) {
+      // Initialize start time on first frame
+      if (!startTimeRef.current) {
+        startTimeRef.current = timestamp;
+      }
+      
+      const elapsed = timestamp - startTimeRef.current;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      
+      if (animationPhase === 'growing') {
+        drawGrowingTree(ctx, tree, elapsed);
+        
+        // Transition to swaying when growth completes
+        if (elapsed >= GROWTH_DURATION) {
+          setAnimationPhase('swaying');
+          startTimeRef.current = timestamp; // Reset for sway phase
+        }
+      } else if (animationPhase === 'swaying') {
+        drawSwayingTree(ctx, tree, elapsed);
+      }
+      
+      animationIdRef.current = requestAnimationFrame(animate);
+    }
+    
+    animationIdRef.current = requestAnimationFrame(animate);
+    
+    // Cleanup function
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
       }
     };
-  }, [branches, canvasWidth, canvasHeight, phase]);
-
-  function drawBranch(ctx, branch, opacity) {
-    ctx.strokeStyle = branch.color;
-    ctx.globalAlpha = opacity;
-    ctx.lineWidth = branch.thickness;
-    ctx.beginPath();
-    ctx.moveTo(branch.x1, branch.y1);
-    ctx.lineTo(branch.x2, branch.y2);
-    ctx.stroke();
-    ctx.globalAlpha = 1.0;
-  }
-
+  }, [animationPhase]);
+  
   return (
-    <canvas
-      ref={canvasRef}
-      width={canvasWidth}
-      height={canvasHeight}
-      style={{ display: 'block' }}
-    />
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      minHeight: '100vh', 
+      background: '#87ceeb' 
+    }}>
+      <canvas
+        ref={canvasRef}
+        width={CANVAS_WIDTH}
+        height={CANVAS_HEIGHT}
+        style={{ border: '2px solid #333' }}
+      />
+    </div>
   );
 }
+
+export default FractalTree;
