@@ -1,9 +1,9 @@
-# Verification Protocol — INT-001: Create Basic Web App Framework with React
+# Verification Protocol — Create Basic Web App Framework with React
 
-**Protocol ID:** VP-INT-001-1  
-**Generated:** 2024-01-XX  
-**Intent:** INT-001  
-**Proposal:** PROP-INT-001-1
+**Protocol ID:** VP-ORB-1-1
+**Generated:** 2025-02-17
+**Intent:** Create Basic Web App Framework with React (Orbit 1)
+**Proposal:** PROP-ORB-1-1
 
 ---
 
@@ -11,15 +11,10 @@
 
 | ID | Traces To | Check | Tool | Expected | Blocking |
 |----|-----------|-------|------|----------|----------|
-| AG-01 | Application builds without errors using `npm run build` or equivalent | Production build completes successfully with exit code 0 | `npm run build` from repository root | Build completes, `dist/` or `build/` directory created with `index.html` and bundled JS assets | Yes |
-| AG-02 | Development server starts successfully and serves content on localhost | Dev server starts and responds to HTTP requests | `npm run dev` (or equivalent), then `curl http://localhost:5173/` (adjust port) | Server returns HTTP 200, HTML content includes `<div id="root">` or equivalent mount point | Yes |
-| AG-03 | Browser console shows zero critical errors on route access | Console error check on Home route load | Manual inspection: Open dev tools console, navigate to `/`, check for errors | Zero errors or warnings logged to console (info logs acceptable) | Yes |
-| AG-04 | Browser console shows zero critical errors on route access | Console error check on Settings route load | Manual inspection: Navigate to `/settings`, check console | Zero errors or warnings logged to console | Yes |
-| AG-05 | `.gitignore` excludes `node_modules/`, build artifacts, and environment files | `.gitignore` file exists and contains required patterns | `cat .gitignore` — verify presence of `node_modules/`, `dist/`, `build/`, `.env*` entries | File exists with all required exclusions | Yes |
-| AG-06 | Repository Integrity: Must not modify `.orbital/` directory structure | `.orbital/` directory unchanged | `git diff --exit-code .orbital/` | Exit code 0 (no changes detected) | Yes |
-| AG-07 | Repository Integrity: Must not modify `README.md` content | `README.md` unchanged | `git diff --exit-code README.md` | Exit code 0, content remains "Testing purposes" | Yes |
-| AG-08 | No critical npm dependency vulnerabilities | Dependency security audit | `npm audit --audit-level=high` | Zero high or critical vulnerabilities (moderate/low acceptable for MVP) | No |
-| AG-09 | Production bundle size reasonable for minimal SPA | Bundle size check | `ls -lh dist/assets/*.js` (or `build/static/js/*.js`) and calculate gzipped size | Main bundle gzipped size <200KB | No |
+| AG-01 | `npm install && npm run dev` launches development server without errors | Installation and dev server startup completes successfully | Manual execution: `npm install && npm run dev` in repository root | Exit code 0 for install, dev server starts and outputs localhost URL, no error messages in terminal | Yes |
+| AG-02 | Browser console shows zero runtime errors during navigation between routes | No JavaScript errors logged during route navigation | Browser DevTools Console — navigate Home → Settings → Home | Zero errors, zero warnings related to application code (ignore browser extension noise) | Yes |
+| AG-03 | Repository includes `.gitignore` excluding `node_modules` and build artifacts | .gitignore file exists and excludes critical directories | File existence check + content verification: `.gitignore` contains `node_modules/`, `dist/`, `.env*` | All three patterns present in file | Yes |
+| AG-04 | Development server supports hot module replacement for code changes | HMR updates browser without full page reload | Manual test: Start dev server, modify `src/pages/Home.jsx` content, observe browser | Browser updates content without full page reload (URL stays same, no network request for index.html) | No |
 
 ---
 
@@ -27,16 +22,16 @@
 
 | ID | Traces To | Check | Method | Assessed By |
 |----|-----------|-------|--------|-------------|
-| HV-01 | Both `/` (Home) and `/settings` routes render distinct content when accessed directly via URL | Verify direct URL access to both routes works without 404 errors | Manual test: (1) Start dev server, (2) Enter `http://localhost:5173/` in browser address bar, verify Home content renders, (3) Enter `http://localhost:5173/settings` directly in address bar, verify Settings content renders | System Architect |
-| HV-02 | At least one visual difference between Home and Settings routes is observable | Verify visual distinction between routes | Manual inspection: Navigate to Home, observe heading/content; navigate to Settings, confirm different heading/content visible | System Architect |
-| HV-03 | Navigation between routes functions without full page reload (SPA behavior confirmed) | Verify client-side navigation with network monitoring | Manual test: Open browser dev tools Network tab, navigate from Home to Settings via navigation link, confirm no document reload request (only XHR/fetch if data loading, but none expected for MVP) | System Architect |
-| HV-04 | Browser back/forward buttons work correctly (Target State criterion) | Verify browser history API integration | Manual test: (1) Navigate Home → Settings via nav link, (2) Click browser back button, confirm return to Home without reload, (3) Click forward button, confirm return to Settings | System Architect |
-| HV-05 | Navigation component present and functional on both routes (Target State criterion) | Verify shared navigation component renders and links work | Manual inspection: Confirm navigation (nav bar or menu) visible on Home and Settings pages, links are clickable and styled distinctly from body text | System Architect |
-| HV-06 | Basic HTML semantics applied (Target State criterion) | Review heading hierarchy and semantic elements | Code review: Inspect `Home.jsx`, `Settings.jsx`, `Navigation.jsx` for proper `<nav>`, `<main>`, heading tags (`<h1>`, `<h2>`) in logical order | System Architect |
-| HV-07 | Responsive layout adapts to mobile viewport (Target State criterion) | Verify 320px width rendering | Manual test: Open browser dev tools, set viewport to 320px width, navigate to both routes, confirm content is readable and navigation is accessible (no horizontal scroll or overlapping elements) | System Architect |
-| HV-08 | Architecture accommodates future route additions without refactoring (Extensibility Requirement constraint) | Review routing implementation for extensibility | Code review: Examine `App.jsx` route definitions, confirm adding a third route (e.g., `/about`) requires only: (1) Create `About.jsx` component, (2) Add `<Route path="/about" element={<About />} />` to existing `Routes`, (3) Add link to Navigation component. No structural refactoring required. | System Architect |
-| HV-09 | Framework choice (Vite/CRA), React Router version, and directory structure align with team constraints and deployment targets | Validate architectural decisions against project context | Architecture review: Confirm proposal rationale for build tool, routing library, and folder structure documented. Human reviewer must approve choices based on team expertise, deployment environment, and long-term maintenance philosophy. | System Architect |
-| HV-10 | Development environment runnable on standard Node.js LTS without specialized tooling | Verify setup simplicity | Manual test: Clone repository in clean environment, run `npm install` then `npm run dev`, confirm application runs without additional configuration or global tool installations | System Architect |
+| HV-01 | Navigating to `http://localhost:[PORT]` renders a Home page with visible content | Home page renders successfully with meaningful content | Open browser to dev server URL, visually verify Home page displays text/content (not blank or error) | Verification Engineer |
+| HV-02 | A UI mechanism allows navigation to Settings page | Navigation UI exists and functions correctly | Identify navigation component (header/sidebar), click Settings link, verify URL changes to `/settings` and page content changes | Verification Engineer |
+| HV-03 | Settings page renders distinct content from Home page | Settings page has different content than Home page | Compare visual content of Home vs Settings — different heading, different body text or components | Verification Engineer |
+| HV-04 | Navigation UI component persists across route changes | Navigation remains visible when switching routes | Navigate Home → Settings → Home, verify navigation UI stays in same location and doesn't disappear/re-render visually | Verification Engineer |
+| HV-05 | Home and Settings pages have semantic HTML structure (`<main>`, `<nav>`, headings) | Semantic HTML elements used correctly | Open browser DevTools Elements panel, inspect Home and Settings pages, verify `<main>` wraps page content, `<nav>` wraps navigation links, each page has `<h1>` heading | Verification Engineer |
+| HV-06 | Repository includes a README section documenting how to start the application | README.md contains setup instructions | Open README.md, verify it includes section explaining how to install dependencies and start dev server (commands visible) | Verification Engineer |
+| HV-07 | Application uses React Router or equivalent routing library | React Router (or equivalent) used for routing, not manual window.location | Review `package.json` dependencies for `react-router-dom`, review `App.jsx` for `<BrowserRouter>`, `<Routes>`, `<Route>` components | System Architect |
+| HV-08 | Lighthouse Accessibility score ≥ 90 for both routes | Accessibility baseline meets target threshold | Run Lighthouse audit in Chrome DevTools on Home and Settings pages, verify Accessibility score ≥ 90 for both | Verification Engineer |
+| HV-09 | Keyboard navigation works — Tab through links, Enter to activate | Navigation is keyboard-accessible | Use Tab key to focus navigation links, verify focus indicator visible, press Enter to navigate, verify route changes | Verification Engineer |
+| HV-10 | Component file organization follows proposed structure | Files located in correct directories per proposal | Verify `src/pages/` contains Home.jsx and Settings.jsx, `src/components/` contains Navigation.jsx, styles in `src/styles/` or co-located | System Architect |
 
 ---
 
@@ -44,27 +39,24 @@
 
 | Acceptance Criterion | Covered By |
 |---------------------|------------|
-| Application builds without errors using `npm run build` or equivalent | AG-01 |
-| Development server starts successfully and serves content on localhost | AG-02 |
-| Both `/` (Home) and `/settings` routes render distinct content when accessed directly via URL | HV-01 |
-| Navigation between routes functions without full page reload (SPA behavior confirmed) | HV-03 |
-| Browser console shows zero critical errors on route access | AG-03, AG-04 |
-| At least one visual difference between Home and Settings routes is observable | HV-02 |
-| Page load time <2 seconds on 3G connection simulation (Target State) | *(Deferred to future orbit — no tooling for 3G simulation in MVP)* |
-| All routes accessible via browser back/forward buttons (Target State) | HV-04 |
-| Navigation component (nav bar or menu) present and functional on both routes (Target State) | HV-05 |
-| Basic HTML semantics applied (Target State) | HV-06 |
-| Responsive layout that adapts to mobile viewport (320px width minimum) (Target State) | HV-07 |
-| Must use React as the UI library (constraint) | *(Verified by presence of `react` and `react-dom` in `package.json` dependencies)* |
-| Exactly two routes required at completion (constraint) | *(Verified by HV-01 and code review confirming only `/` and `/settings` routes defined)* |
-| Must not modify or remove `.orbital/` directory structure or `README.md` (constraint) | AG-06, AG-07 |
-| Solution must be runnable on standard Node.js LTS versions without specialized tooling (constraint) | HV-10 |
-| Architecture must accommodate future route additions without structural refactoring (constraint) | HV-08 |
+| `npm install && npm run dev` launches a development server without errors | AG-01 |
+| Navigating to `http://localhost:[PORT]` renders a Home page with visible content | HV-01 |
+| A UI mechanism (link, button, nav menu) allows navigation to Settings page | HV-02 |
+| Settings page renders distinct content from Home page | HV-03 |
+| Browser console shows zero runtime errors during navigation between routes | AG-02 |
+| Repository includes a README section documenting how to start the application | HV-06 |
+| Application uses React Router (or equivalent routing library) rather than manual route handling | HV-07 |
+| Navigation UI component (header/sidebar) persists across route changes | HV-04 |
+| Home and Settings pages have semantic HTML structure (`<main>`, `<nav>`, headings) | HV-05 |
+| Development server supports hot module replacement for code changes | AG-04 |
+| Repository includes `.gitignore` excluding `node_modules` and build artifacts | AG-03 |
+| Lighthouse Accessibility score ≥ 90 for both routes | HV-08, HV-09 |
 
-**Orphan checks:** None  
-**Uncovered criteria:**
-- **"Page load time <2 seconds on 3G connection simulation"** — Deferred to future orbit. No automated 3G throttling tooling included in MVP. Lighthouse audit (stretch goal) would measure this, but not blocking for Tier 2 approval.
-- **Stretch goals** (route transitions, 404 route, Lighthouse ≥90, test coverage) — Explicitly marked as not required for approval in Intent Document.
+**Orphan checks:** None
+
+**Uncovered criteria:** None (all minimal viable and target acceptance criteria have corresponding verification checks)
+
+**Note on Stretch Goals:** Stretch acceptance criteria (interactive Settings component, deep-linking, TypeScript, unit tests) are intentionally not covered in this verification protocol. Per the proposal, the recommended scope is Target acceptance level. If stretch goals are pursued, this protocol must be updated with additional verification checks before those features are implemented.
 
 ---
 
@@ -72,19 +64,14 @@
 
 | Failure Mode | Action | Owner |
 |-------------|--------|-------|
-| Build fails (AG-01) — syntax errors, missing dependencies, config issues | re-orbit — Fix errors and re-run build. If dependency conflicts unresolvable, escalate to System Architect to re-evaluate tool choices. | AI Agent → System Architect (if architectural) |
-| Dev server fails to start (AG-02) — port conflicts, missing config, runtime errors | re-orbit — Resolve port conflict or configuration error and restart. Document resolution in orbit log. | AI Agent |
-| Console errors on route load (AG-03, AG-04) — React warnings, router errors, uncaught exceptions | re-orbit — Fix errors at source. Critical errors (uncaught exceptions) are blocking; React warnings acceptable if non-breaking. | AI Agent |
-| `.orbital/` or `README.md` modified (AG-06, AG-07) — accidental edit during implementation | rollback — Revert changes to protected files via `git checkout`. Re-run verification to confirm clean state. | AI Agent |
-| npm audit finds high/critical vulnerabilities (AG-08) — dependency security issues | re-orbit — Update vulnerable packages to patched versions if available. If no patch exists and vulnerability is in dev dependency (not runtime), document as known issue and proceed (non-blocking gate). | AI Agent |
-| Bundle size exceeds 200KB gzipped (AG-09) — oversized dependencies or poor code splitting | re-orbit — Profile bundle with build tool analyzer, remove unnecessary dependencies or enable code splitting. Non-blocking for Tier 2 but must be addressed before production deployment. | AI Agent |
-| Direct URL access to routes fails (HV-01) — server returns 404 for `/settings` | re-orbit — Vite dev server should handle SPA routing automatically. If failing, check server config. Document deployment requirement for production (server must serve `index.html` for all routes). | System Architect |
-| Routes not visually distinct (HV-02) — identical content between Home and Settings | re-orbit — Update content or styling to create clear visual difference (different heading, color, layout element). | AI Agent |
-| Full page reload detected on navigation (HV-03) — using `<a href>` instead of `<Link>` | re-orbit — Replace anchor tags with React Router `Link` components in Navigation. Re-test with network monitor. | AI Agent |
-| Browser back/forward buttons broken (HV-04) — routing library not configured correctly | re-orbit — Verify `BrowserRouter` wraps app correctly. Test with simple navigation flow to isolate issue. | AI Agent |
-| Navigation component missing or non-functional (HV-05) — links don't navigate or component not rendered | re-orbit — Ensure Navigation component imported and rendered in both page components. Verify links use correct `to` prop syntax. | AI Agent |
-| HTML semantics incorrect (HV-06) — improper heading hierarchy or missing semantic tags | re-orbit — Refactor components to use semantic HTML. Non-blocking but must be addressed for accessibility compliance in future orbits. | AI Agent |
-| 320px viewport layout broken (HV-07) — horizontal scroll or overlapping elements on mobile | re-orbit — Add responsive CSS (media queries or flexible units). Test across mobile viewport sizes. | AI Agent |
-| Architecture not extensible (HV-08) — adding third route requires refactoring | modify-intent — If routing structure is fundamentally rigid, proposal assumptions were incorrect. Escalate to re-evaluate routing library choice or restructure route definitions. | System Architect |
-| Architectural decisions misaligned with team/deployment constraints (HV-09) — wrong build tool for deployment target or team expertise | modify-intent — If human reviewer identifies fundamental mismatch (e.g., Vite chosen but team requires Webpack, or deployment environment doesn't support SPA routing), proposal must be revised. | System Architect |
-| Setup not runnable on standard Node.js (HV-10) — requires global tools or non-LTS Node version | re-orbit — Remove global tool dependencies or update to use npx for tooling. Ensure `package.json` engines field specifies compatible Node version. | AI Agent |
+| `npm install` fails — dependency resolution error or network issue | re-orbit — investigate dependency conflict, check npm registry access, verify Node.js version compatibility; if unresolvable, escalate to System Architect for tooling decision review | AI Agent → System Architect |
+| Dev server fails to start — port conflict or Vite configuration error | re-orbit — identify port conflict (try different port), review `vite.config.js` for syntax errors; if configuration issue is foundational, escalate | AI Agent → System Architect |
+| Browser console shows runtime errors during navigation | re-orbit — debug JavaScript errors, verify React Router configuration, check component imports; this is a blocking gate, must be resolved | AI Agent |
+| HMR does not work — full page reload required for changes | re-orbit — verify Vite HMR configuration, check if file types are supported for HMR; non-blocking but degrades developer experience significantly, should be fixed | AI Agent |
+| Navigation UI does not persist across routes (HV-04 fails) | re-orbit — architectural issue with routing setup; Navigation component must be outside `<Routes>`, review component hierarchy | AI Agent → System Architect |
+| Lighthouse Accessibility score < 90 (HV-08 fails) | re-orbit — review Lighthouse report for specific failures (missing alt text, contrast issues, missing ARIA labels), fix issues, re-run audit; this is a target criterion and must pass | AI Agent |
+| Keyboard navigation broken (HV-09 fails) | re-orbit — accessibility-critical; verify `<Link>` components are used (not `<div onClick>`), check focus styles are not disabled, test with screen reader if available | AI Agent → Verification Engineer |
+| Semantic HTML missing (HV-05 fails) | re-orbit — add `<main>`, `<nav>`, `<h1>` elements to components; semantic structure is target criterion and affects accessibility score | AI Agent |
+| React Router not used, manual routing detected (HV-07 fails) | escalate — architectural decision violation; using manual routing contradicts target acceptance and creates technical debt; requires System Architect review to either approve manual approach with justification or mandate re-implementation | System Architect |
+| File organization does not match proposed structure (HV-10 fails) | re-orbit — move files to correct directories per proposal (pages to `src/pages/`, components to `src/components/`); organizational precedent is critical for future orbits | AI Agent |
+| README.md lacks setup instructions (HV-06 fails) | re-orbit — add "Getting Started" section to README with install and dev server commands; minimal viable criterion, must pass | AI Agent |
