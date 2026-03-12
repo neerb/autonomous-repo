@@ -2,69 +2,76 @@
 
 ## Desired Outcome
 
-A functioning single-page application exists in the repository with two accessible routes (Home and Settings) that serves as the foundation for future feature development. The application renders successfully in modern browsers, demonstrates client-side navigation without page reloads, and provides a clear structure for adding new routes and components as the project evolves.
+A functional React-based web application framework exists in the repository that serves as the foundation for future development. The application renders successfully in a browser, provides stable navigation between two distinct views (Home and Settings), and establishes a maintainable architecture pattern that can be extended with additional routes and features without requiring structural refactoring.
+
+When complete, a developer can clone the repository, run standard Node.js commands, and interact with a working web application that demonstrates routing capability and follows modern React development practices.
 
 ## Constraints
 
-- **Framework Lock:** Must use React as the UI library; no alternative frameworks (Vue, Svelte, Angular) permitted
-- **Route Count:** Exactly two routes required at completion — Home and Settings — no more, no fewer
-- **Browser Compatibility:** Must support current versions of Chrome, Firefox, Safari, and Edge (last 2 major releases)
-- **Repository Integrity:** Must not modify or remove existing `.orbital/` directory structure or `README.md` content
-- **Development Environment:** Solution must be runnable on standard Node.js LTS versions without requiring specialized tooling beyond npm/yarn
-- **No Backend Dependency:** Initial framework must operate entirely client-side; no server-side rendering or API integration required at this stage
-- **Extensibility Requirement:** Architecture must accommodate future route additions without structural refactoring
+- **Framework Lock:** Must use React as the core UI library; no alternative frameworks (Vue, Angular, Svelte) permitted
+- **Route Scope:** Exactly two routes must be implemented: Home and Settings — no more, no fewer
+- **No Backend:** This orbit delivers frontend-only artifacts; no server-side logic, database connections, or API integrations
+- **Standard Tooling:** Must use contemporary React ecosystem tooling (e.g., Vite, Create React App, or Next.js) — no custom webpack configurations or deprecated build systems
+- **Repository Cleanliness:** All framework code must reside in clearly organized directories; no framework files at repository root except standard config files (package.json, etc.)
+- **Accessibility Baseline:** Must meet WCAG 2.1 Level A minimum for navigation and route content
+- **Browser Compatibility:** Must function in Chromium-based browsers (Chrome, Edge) and Firefox; Safari and mobile browser testing are non-goals
 
 ## Acceptance Boundaries
 
-**Minimum Viable (Tier 2 Gate):**
-- Application builds without errors using `npm run build` or equivalent
-- Development server starts successfully and serves content on localhost
-- Both `/` (Home) and `/settings` routes render distinct content when accessed directly via URL
-- Navigation between routes functions without full page reload (SPA behavior confirmed)
-- Browser console shows zero critical errors on route access
-- At least one visual difference between Home and Settings routes is observable (text, heading, or component variation)
+### Minimal Viable
+- `npm install && npm run dev` (or equivalent) launches a development server without errors
+- Navigating to `http://localhost:[PORT]` renders a Home page with visible content
+- A UI mechanism (link, button, nav menu) allows navigation to Settings page
+- Settings page renders distinct content from Home page
+- Browser console shows zero runtime errors during navigation between routes
+- Repository includes a README section documenting how to start the application
 
-**Target State:**
-- Page load time <2 seconds on 3G connection simulation
-- All routes accessible via browser back/forward buttons
-- Navigation component (nav bar or menu) present and functional on both routes
-- Basic HTML semantics applied (proper heading hierarchy, semantic elements)
-- Responsive layout that adapts to mobile viewport (320px width minimum)
+### Target
+- All Minimal Viable criteria met
+- Application uses React Router (or equivalent routing library) rather than manual route handling
+- Navigation UI component (header/sidebar) persists across route changes
+- Home and Settings pages have semantic HTML structure (`<main>`, `<nav>`, headings)
+- Development server supports hot module replacement for code changes
+- Repository includes `.gitignore` excluding `node_modules` and build artifacts
+- Lighthouse Accessibility score ≥ 90 for both routes
 
-**Stretch (Not Required for Approval):**
-- Route transition animations implemented
-- 404/Not Found route for invalid paths
-- Accessibility score ≥90 on Lighthouse audit
-- Component-level test coverage established
+### Stretch
+- All Target criteria met
+- Settings page includes at least one interactive component (toggle, input, button) with visible state change
+- Application supports deep-linking (refreshing `/settings` loads Settings page directly)
+- Loading states or transitions between routes provide visual feedback
+- TypeScript enabled with basic type coverage for components
+- Unit tests exist for at least one component using React Testing Library or Jest
 
 ## Trust Tier Assignment
 
 **Tier 2 — Supervised**
 
-**Rationale:** This intent establishes the foundational architecture of the project and introduces external dependencies (React library, build tooling, routing solution) that will constrain all future development. While the blast radius is limited to a greenfield repository with no production users, the decisions made here—choice of build tool (Create React App, Vite, Next.js), routing library (React Router, Wouter, TanStack Router), and project structure—create technical debt that is costly to reverse. The framework selection impacts bundle size, performance characteristics, and developer experience for all subsequent work.
+**Rationale:** This intent establishes the foundational architecture pattern that all subsequent development will build upon. While the technical complexity is moderate and the blast radius is constrained to a greenfield repository with no existing users, the architectural decisions made here (routing approach, project structure, build tooling) create persistent technical debt if poorly chosen.
 
-Additionally, the repository will transition from a static README to an executable application, fundamentally changing its nature. This warrants human review of the architectural approach, dependency choices, and structural patterns before implementation proceeds. The human must confirm that the selected tooling aligns with unstated requirements around deployment targets, team familiarity, and long-term maintenance philosophy.
+The supervised tier is appropriate because:
+- **Foundational Impact:** Framework and routing choices are difficult to reverse after additional features are built on top
+- **Architectural Precedent:** This orbit sets patterns (component structure, naming conventions, directory layout) that future work will inherit
+- **Limited Reversibility:** Swapping build tools or routing libraries mid-project requires significant refactoring
+- **No Production Risk:** Since this is a development repository with no live users, the blast radius is contained to developer experience rather than business operations
+
+Human review at proposal and verification stages ensures the chosen architecture aligns with unstated long-term goals and team conventions that may not be captured in this intent document.
 
 ## Dependencies
 
-**External:**
-- Node.js runtime environment (LTS version assumed available)
-- npm or yarn package manager
-- React library (version to be determined in Context Package phase)
-- Client-side routing library (React Router or equivalent)
-- Build tooling (bundler and dev server)
+### External Dependencies
+- **Node.js Runtime:** Version 18.x or higher (LTS) must be available in the development environment
+- **Package Registry:** Access to npm registry (npmjs.com) for installing React and build tooling dependencies
+- **Git:** Repository must support standard Git operations for committing framework files
 
-**Internal:**
-- Repository write access to create application files and directories
-- Ability to add `package.json` and dependency management files
-- Assumption that `.gitignore` will be created to exclude `node_modules/` and build artifacts
+### Internal Dependencies
+- **Repository Write Access:** CI/CD or developer environment must have permissions to write new files and directories to the repository
+- **Branch Strategy:** Assumes work occurs on a feature branch or direct main branch (no complex merge dependencies)
 
-**Blockers:**
-- None identified — repository is empty aside from ORBITAL artifacts and README, providing clean slate for initialization
+### Upstream Dependencies
+None — this is the foundational intent with no prior orbits or intents blocking it.
 
-**Assumed Non-Dependencies:**
-- No backend services or APIs required
-- No database or persistent storage
-- No authentication or user management
-- No third-party integrations or external data sources
-- No CI/CD pipeline (deployment mechanism out of scope for this intent)
+### Downstream Implications
+- Future intents adding features, components, or pages will depend on the routing and build system established here
+- The component structure and state management patterns chosen will constrain or enable future architectural decisions
+- Deployment and hosting intents will require the build output format and configuration established in this orbit
