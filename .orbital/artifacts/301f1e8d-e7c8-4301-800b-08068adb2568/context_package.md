@@ -19,7 +19,7 @@
 - Current state: File exists but contents unknown
 - Purpose: Complete Three.js scene setup and animation loop
 - Imports required:
-  - `three` — Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshStandardMaterial, Mesh, AmbientLight, DirectionalLight
+  - `three` — Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshStandardMaterial, Mesh, AmbientLight, DirectionalLight, Color
   - `three/examples/jsm/controls/OrbitControls.js` — OrbitControls class
 - Scope: Must contain all scene initialization, render loop, and window resize handler
 - Constraint: Total lines must not exceed 100
@@ -42,7 +42,7 @@
 **.orbital/artifacts/** (all subdirectories)
 - Purpose: ORBITAL system metadata and prior orbit artifacts
 - Status: Read-only reference material
-- Relevance: Orbit a6b4c09a and c71c2625 contain prior work patterns
+- Relevance: Orbit 301f1e8d (current), a6b4c09a (prior incomplete), and c71c2625 (complete example) contain patterns
 
 ### Vite Configuration
 
@@ -149,7 +149,7 @@ This is a **flat, minimal architecture** with no abstraction layers:
 
 **ES Module Pattern:**
 ```javascript
-import { Scene, PerspectiveCamera, WebGLRenderer } from 'three';
+import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshStandardMaterial, Mesh, AmbientLight, DirectionalLight, Color } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 ```
 
@@ -182,6 +182,13 @@ document.body.appendChild(renderer.domElement);
 - Pixel ratio accounts for high-DPI displays
 - Canvas appended directly to body
 
+**Background Color Pattern:**
+```javascript
+scene.background = new Color(0x1a1a2e);
+```
+- Requires Color import from 'three'
+- Hexadecimal color value specified in Intent
+
 **Material Pattern:**
 ```javascript
 const material = new MeshStandardMaterial({ color: 0xcolor });
@@ -193,8 +200,11 @@ const material = new MeshStandardMaterial({ color: 0xcolor });
 **Lighting Pattern:**
 ```javascript
 const ambientLight = new AmbientLight(0xffffff, intensity);
+scene.add(ambientLight);
+
 const directionalLight = new DirectionalLight(0xffffff, intensity);
 directionalLight.position.set(x, y, z);
+scene.add(directionalLight);
 ```
 - Ambient provides base illumination (no shadows)
 - Directional provides directional lighting (simulates sun)
@@ -222,26 +232,43 @@ animate();
 
 **Viewport Fill:**
 ```css
-body, html {
+* {
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  box-sizing: border-box;
+}
+
+body, html {
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 canvas {
   display: block;
-  width: 100vw;
-  height: 100vh;
 }
 ```
-- Zero margins eliminate default browser spacing
+- Universal selector reset eliminates all default spacing
 - Overflow hidden prevents scrollbars
 - Canvas set to block display to remove inline spacing
-- 100vw/100vh ensures full viewport coverage
+- No explicit canvas dimensions — handled by JavaScript
 
 ## Prior Orbit References
+
+### Orbit 301f1e8d (Current Orbit)
+
+**Artifacts Present:**
+- `.orbital/artifacts/301f1e8d-e7c8-4301-800b-08068adb2568/intent_document.md` — Current Intent
+- `.orbital/artifacts/301f1e8d-e7c8-4301-800b-08068adb2568/context_package.md` — This document
+- `.orbital/artifacts/301f1e8d-e7c8-4301-800b-08068adb2568/proposal_record.md` — Implementation plan
+
+**Status:** In progress (context phase)
+
+**Key Decisions:**
+- Full file replacement strategy adopted
+- Line count estimated at 46-50 lines (within 100-line budget)
+- Color import identified as required addition
+- OrbitControls damping configuration specified for Level 2 acceptance
 
 ### Orbit a6b4c09a (Prior Three.js Work)
 
@@ -251,7 +278,7 @@ canvas {
 - `.orbital/artifacts/a6b4c09a-283b-48f1-9386-68f4ef295656/proposal_record.md`
 
 **Analysis:**
-- No verification protocol present (orbit may not have completed)
+- No verification protocol present (orbit likely incomplete)
 - Suggests previous attempt at Three.js integration
 - Current state of files (index.html, src/main.js, src/style.css) may contain partial implementation from this orbit
 - Risk: Existing files may have incomplete or non-compliant code
@@ -260,6 +287,7 @@ canvas {
 - Verification absence indicates potential incomplete execution
 - Current orbit must not assume prior orbit's output is correct
 - All files should be validated against Intent requirements, not trusted as-is
+- Full replacement strategy mitigates contamination risk
 
 ### Orbit c71c2625 (Complete Prior Work)
 
@@ -267,16 +295,19 @@ canvas {
 - Complete artifact set including verification protocol, test results, and code generation
 - `.orbital/artifacts/c71c2625-0f6b-441c-a24b-a5d187d1ae16/verification_protocol.md`
 - `.orbital/artifacts/c71c2625-0f6b-441c-a24b-a5d187d1ae16/test_results.md`
+- `.orbital/artifacts/c71c2625-0f6b-441c-a24b-a5d187d1ae16/code_generation.md`
 
 **Analysis:**
-- Demonstrates successful orbit completion pattern
-- Shows verification standards used in this repository
+- Demonstrates successful orbit completion pattern in this repository
+- Shows verification standards and test result documentation structure
 - Unknown domain — not necessarily Three.js related
+- Provides template for quality assurance approach
 
 **Lessons:**
 - Verification protocol should follow similar structure for consistency
 - Test results pattern provides template for Level 1/2/3 acceptance validation
 - Complete artifact generation establishes quality bar for this trajectory
+- Code generation artifact suggests automated code production approach
 
 ### Pattern Divergence Risk
 
@@ -286,9 +317,10 @@ canvas {
 - Cannot verify if existing code follows current Intent constraints (100 line limit, no TypeScript, specific background color)
 
 **Mitigation:**
-- Proposal must include explicit "verify or replace" decision for each existing file
+- Proposal Record (orbit 301f1e8d) recommends full file replacement rather than incremental patching
 - Cannot assume existing code is compliant — must validate against Intent
-- If existing code is non-compliant, full file replacement is safer than patching
+- If existing code is non-compliant, full file replacement is safer than debugging inheritance issues
+- Clean slate approach reduces complexity and ensures Intent compliance
 
 ## Risk Assessment
 
@@ -310,6 +342,7 @@ canvas {
 - Minimize whitespace and comments (Intent specifies "not a tutorial")
 - Prioritize functional code over defensive programming
 - Test line count during implementation, not after completion
+- Proposal Record estimates 46-50 lines, leaving substantial buffer
 
 ### Risk: Three.js Version API Incompatibility
 
@@ -321,11 +354,13 @@ canvas {
 - OrbitControls import path changed in recent versions
 - Constructor signatures modified
 - Deprecated methods removed
+- Color class API changes
 
 **Mitigation:**
 - Verify OrbitControls import path: `three/examples/jsm/controls/OrbitControls.js` is correct for v0.160.0
 - Use standard constructors documented in Three.js r160 release notes
 - Test imports immediately after implementation
+- Color import added to handle scene.background assignment (required since r149)
 - Fallback: Adjust version constraint if critical API incompatibility discovered
 
 ### Risk: Window Resize Handler Performance
@@ -344,6 +379,7 @@ canvas {
 - Debouncing would add complexity and line count
 - Modern browsers handle resize events efficiently
 - Brief performance degradation during resize acceptable for learning project
+- Level 2 acceptance measures steady-state 60fps, not during resize operations
 
 ### Risk: Vite Configuration Assumption Failure
 
@@ -360,7 +396,7 @@ canvas {
 - Vite 5.0.0 supports zero-config ES modules by default
 - package.json "type": "module" field already present (confirmed in repository)
 - Three.js is standard ESM-compatible package
-- If failure occurs: Create minimal vite.config.js with explicit resolve configuration
+- If failure occurs: Create minimal vite.config.js with explicit resolve configuration (adds one file but maintains Intent compliance)
 
 ### Risk: Existing File Contamination
 
@@ -373,12 +409,14 @@ canvas {
 - Framework imports in existing code
 - Non-standard project structure
 - Background color not set to 0x1a1a2e
+- Line count already exceeding 100
 
 **Mitigation:**
-- Proposal must include explicit validation step for each existing file
+- Proposal Record includes explicit validation step for each existing file
 - Recommend full file replacement rather than incremental patching
 - Do not attempt to preserve prior orbit's code if non-compliant
 - Clean slate approach reduces complexity and ensures Intent compliance
+- Orbit 301f1e8d Proposal adopts full replacement strategy
 
 ### Risk: Browser WebGL Support Variability
 
@@ -393,9 +431,10 @@ canvas {
 
 **Mitigation:**
 - Intent explicitly accepts "not cross-browser tested" limitation
-- Target audience is developers with modern browsers
+- Target audience is developers with modern browsers (Chrome 90+, Firefox 88+, Safari 14+)
 - No fallback required per non-goals
 - Document browser requirements in verification protocol
+- WebGLRenderer will produce console errors if WebGL unavailable
 
 ### Risk: OrbitControls Damping Configuration
 
@@ -410,9 +449,10 @@ canvas {
 
 **Mitigation:**
 - Enable damping explicitly: `controls.enableDamping = true; controls.dampingFactor = 0.05;`
-- Requires `controls.update()` call in animation loop (already planned)
+- Requires `controls.update()` call in animation loop (already planned in Proposal)
 - Adds ~2 lines to implementation
 - Cost acceptable within 100-line budget
+- Proposal Record specifies this configuration
 
 ### Risk: Canvas Append Timing Issue
 
@@ -430,3 +470,21 @@ canvas {
 - Or use type="module" defer behavior (already planned)
 - Module scripts execute after DOM parsing by default
 - Risk minimal with modern browser behavior
+- HTML structure in Proposal places script in body, not head
+
+### Risk: Color Import Omission
+
+**Severity:** Medium (runtime error blocking scene initialization)
+
+**Scenario:** Forgetting to import Color class from 'three' causes scene.background assignment to fail.
+
+**Indicators:**
+- Runtime error: "Color is not defined"
+- Scene renders with default black background instead of 0x1a1a2e
+- Rejection criterion triggered (background color incorrect)
+
+**Mitigation:**
+- Proposal Record explicitly identifies Color import as required
+- Import list includes Color in Section 1 of implementation plan
+- Pattern library documents Color usage for background assignment
+- Verification protocol should check background color visually
