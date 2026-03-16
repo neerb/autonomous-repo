@@ -260,15 +260,18 @@ canvas {
 **Artifacts Present:**
 - `.orbital/artifacts/301f1e8d-e7c8-4301-800b-08068adb2568/intent_document.md` — Current Intent
 - `.orbital/artifacts/301f1e8d-e7c8-4301-800b-08068adb2568/context_package.md` — This document
-- `.orbital/artifacts/301f1e8d-e7c8-4301-800b-08068adb2568/proposal_record.md` — Implementation plan
+- `.orbital/artifacts/301f1e8d-e7c8-4301-800b-08068adb2568/proposal_record.md` — Implementation plan (sibling artifact)
 
 **Status:** In progress (context phase)
 
-**Key Decisions:**
-- Full file replacement strategy adopted
-- Line count estimated at 46-50 lines (within 100-line budget)
-- Color import identified as required addition
-- OrbitControls damping configuration specified for Level 2 acceptance
+**Key Decisions from Proposal:**
+- Full file replacement strategy adopted for index.html, src/main.js, src/style.css
+- 48-line implementation in main.js (52-line buffer under 100-line constraint)
+- Color import identified as required for scene.background assignment
+- OrbitControls damping configuration specified (enableDamping=true, dampingFactor=0.05)
+- Camera positioned at z=5 to frame 2x2x2 cube
+- Lighting balance: Ambient 0.5, Directional 0.8 at position (5,5,5)
+- Cube material color 0x00ff88 (teal) for contrast with dark background
 
 ### Orbit a6b4c09a (Prior Three.js Work)
 
@@ -317,7 +320,7 @@ canvas {
 - Cannot verify if existing code follows current Intent constraints (100 line limit, no TypeScript, specific background color)
 
 **Mitigation:**
-- Proposal Record (orbit 301f1e8d) recommends full file replacement rather than incremental patching
+- Orbit 301f1e8d Proposal Record recommends full file replacement rather than incremental patching
 - Cannot assume existing code is compliant — must validate against Intent
 - If existing code is non-compliant, full file replacement is safer than debugging inheritance issues
 - Clean slate approach reduces complexity and ensures Intent compliance
@@ -337,12 +340,12 @@ canvas {
 - Comments exceeding minimal documentation
 
 **Mitigation:**
+- Proposal Record specifies 48-line implementation (52-line buffer remaining)
 - Use compact initialization patterns (inline object creation where appropriate)
 - Combine related setup into single statement chains
 - Minimize whitespace and comments (Intent specifies "not a tutorial")
 - Prioritize functional code over defensive programming
 - Test line count during implementation, not after completion
-- Proposal Record estimates 46-50 lines, leaving substantial buffer
 
 ### Risk: Three.js Version API Incompatibility
 
@@ -412,11 +415,10 @@ canvas {
 - Line count already exceeding 100
 
 **Mitigation:**
-- Proposal Record includes explicit validation step for each existing file
+- Proposal Record adopts full file replacement strategy
 - Recommend full file replacement rather than incremental patching
 - Do not attempt to preserve prior orbit's code if non-compliant
 - Clean slate approach reduces complexity and ensures Intent compliance
-- Orbit 301f1e8d Proposal adopts full replacement strategy
 
 ### Risk: Browser WebGL Support Variability
 
@@ -448,11 +450,10 @@ canvas {
 - Level 2 acceptance criterion "smooth, natural camera motion" not met
 
 **Mitigation:**
-- Enable damping explicitly: `controls.enableDamping = true; controls.dampingFactor = 0.05;`
-- Requires `controls.update()` call in animation loop (already planned in Proposal)
+- Proposal Record specifies: `controls.enableDamping = true; controls.dampingFactor = 0.05;`
+- Requires `controls.update()` call in animation loop (already planned)
 - Adds ~2 lines to implementation
 - Cost acceptable within 100-line budget
-- Proposal Record specifies this configuration
 
 ### Risk: Canvas Append Timing Issue
 
@@ -485,6 +486,6 @@ canvas {
 
 **Mitigation:**
 - Proposal Record explicitly identifies Color import as required
-- Import list includes Color in Section 1 of implementation plan
+- Import list includes Color in implementation specification
 - Pattern library documents Color usage for background assignment
 - Verification protocol should check background color visually
