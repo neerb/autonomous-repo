@@ -120,15 +120,15 @@ This orbit involves scaffolding a complete project structure from scratch with e
 - **Modern Web Browser:** Chrome 90+, Firefox 88+, Safari 14+, or Edge 90+ (WebGL 2.0 support required)
 
 ### Prior Orbit Dependencies
-None — this is a greenfield project initialization.
+- **Orbit c71c2625-0f6b-441c-a24b-a5d187d1ae16:** Previous attempt created `package.json` successfully but did not generate implementation files (`index.html`, `src/main.js`, `src/style.css`). Current orbit inherits compliant `package.json` and must generate the missing 3 files.
 
 ### File System Dependencies
 - **Repository Root Access:** Must create files at paths:
   - `./index.html`
   - `./src/main.js`
   - `./src/style.css`
-  - `./package.json`
 - **`src/` Directory:** Must exist or be created before writing `main.js` and `style.css`
+- **Preserve Existing Files:** Do not modify `./README.md`, `./.orbital/` artifacts, or existing `./package.json`
 
 ### Knowledge Dependencies
 - **Three.js Documentation:** Official docs at threejs.org for API reference (camera setup, renderer options, material properties)
