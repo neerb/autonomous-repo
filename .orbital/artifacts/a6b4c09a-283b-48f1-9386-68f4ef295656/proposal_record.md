@@ -2,54 +2,109 @@
 
 ## Interpreted Intent
 
-This orbit initializes a minimal Three.js project from scratch with zero framework overhead. The goal is to produce a working 3D scene that a developer can run in under 30 seconds after cloning, demonstrating core Three.js capabilities (geometry, materials, lighting, camera controls) without abstraction layers.
+This orbit validates and potentially regenerates the Three.js starter project implementation files to ensure strict compliance with the Intent Document's acceptance boundaries. Based on Context Package analysis, orbit c71c2625 previously generated all 4 required files (`package.json`, `index.html`, `src/main.js`, `src/style.css`), but this orbit (a6b4c09a) is running again, indicating potential non-compliance issues.
 
-**Core Requirements Understood:**
-- Create exactly 3 new files: `index.html`, `src/main.js`, `src/style.css` (the existing `package.json` is already compliant)
-- `src/main.js` must be ≤ 100 lines total, including whitespace
-- Use Vite's zero-config mode — no `vite.config.js` or custom plugins
-- Import Three.js core and OrbitControls addon using ES6 module syntax with correct 0.160.0+ paths
-- Render a single rotating cube with `MeshStandardMaterial` (requires lighting to be visible)
-- Enable mouse-drag camera controls via OrbitControls
-- Canvas must fill 100% of viewport with no scrollbars (requires precise CSS reset)
-- Scene background must be dark blue-gray (`0x1a1a2e`)
-- Handle window resize without distorting cube aspect ratio
+**Core Objective:**
+Create a minimal, functional Three.js demonstration that a developer can clone and run in under 30 seconds, seeing a rotating 3D cube with interactive camera controls. The implementation must be so simple that it serves as a learning reference, not a production framework.
 
-**Key Constraints Acknowledged:**
-- No TypeScript, no frameworks, no build config files
-- No shadows, post-processing, or GUI controls (keep it minimal)
-- Animation loop must use `requestAnimationFrame` (not timers)
-- OrbitControls import path must use `/examples/jsm/` (not deprecated `/examples/js/`)
+**Critical Success Factors:**
+- **Zero Configuration Beyond package.json:** Leverage Vite's defaults completely — no `vite.config.js`, no build scripts, no custom plugins
+- **Extreme Code Economy:** Stay well under 100 lines in `src/main.js` (current target: ~40 lines for 60% headroom)
+- **Pixel-Perfect Viewport Coverage:** No scrollbars at any window size, canvas fills 100% of viewport with no gaps or overflow
+- **Correct Three.js 0.160.0+ API Usage:** Use `/examples/jsm/` import paths (not deprecated `/examples/js/`), include `.js` extensions for ES6 module resolution
+- **Physically-Based Rendering:** Use `MeshStandardMaterial` with proper lighting (not `MeshBasicMaterial`) to demonstrate realistic shading
+- **Smooth Interactive Controls:** OrbitControls with damping enabled for fluid camera movement, not jerky snapping
 
-**Success Criteria Interpreted:**
-- Visual confirmation: cube rotates smoothly, responds to mouse drag, maintains aspect ratio on resize
-- Technical confirmation: zero console errors, ≤ 100 lines in `main.js`, 4 files total
-- Performance confirmation: maintains ≥ 55fps on reference hardware
+**Implementation Strategy:**
+Since files already exist in the repository (from orbit c71c2625), this orbit will:
+1. **Read existing file contents** to determine compliance with Intent acceptance boundaries
+2. **Validate against 28+ specific criteria** from Intent and Context documents
+3. **Overwrite only non-compliant files** with correct implementations
+4. **Preserve compliant files** to minimize unnecessary filesystem mutations
+
+**Key Technical Constraints Acknowledged:**
+- Vite's zero-config mode requires `"type": "module"` in `package.json` and `type="module"` in HTML script tag for ES6 import resolution
+- Three.js `PerspectiveCamera` projection matrix must be updated after changing aspect ratio via `camera.updateProjectionMatrix()`
+- `MeshStandardMaterial` renders black without lights in scene (requires both `AmbientLight` and `DirectionalLight`)
+- OrbitControls with damping requires `controls.update()` in animation loop before `renderer.render()`
+- CSS reset requires universal selector (`*`), full-height chain (`html, body`), and canvas display override (`#app { display: block; }`)
 
 ## Implementation Plan
 
-### Phase 1: File Creation and Directory Structure
+### Phase 1: File Validation and Compliance Audit
 
-**Step 1.1: Create `src/` Directory**
-- Check if `./src/` exists using filesystem API
-- If not present, create directory before writing JS/CSS files
-- **Risk Mitigation:** Attempting to write `src/main.js` before directory exists will fail with ENOENT error
+**Step 1.1: Read Existing Files**
+Read contents of:
+- `./package.json` (already confirmed compliant in Context Package — skip validation)
+- `./index.html`
+- `./src/main.js`
+- `./src/style.css`
 
-**Step 1.2: Validate Existing `package.json`**
-- Read `./package.json` and parse JSON
-- Verify presence of required fields:
-  - `"type": "module"` (enables ES6 imports)
-  - `"scripts.dev": "vite"` (dev command)
-  - `"dependencies.three": "^0.160.0"` (Three.js core)
-  - `"devDependencies.vite": "^5.0.0"` (build tool)
-- **Decision Point:** Context Package confirms existing `package.json` is compliant — no modifications needed
-- **Action:** Skip `package.json` write operation to avoid unnecessary file system mutation
+**Step 1.2: Validate Against Acceptance Boundaries**
 
-### Phase 2: HTML Entry Point Implementation
+**`index.html` Validation Checklist:**
+- [ ] DOCTYPE declaration present (`<!DOCTYPE html>`)
+- [ ] `<html lang="en">` attribute set
+- [ ] `<meta charset="UTF-8">` tag present
+- [ ] `<meta name="viewport" content="width=device-width, initial-scale=1.0">` present
+- [ ] `<title>` tag contains descriptive text
+- [ ] `<link rel="stylesheet" href="/src/style.css">` in `<head>`
+- [ ] `<canvas id="app"></canvas>` in `<body>`
+- [ ] `<script type="module" src="/src/main.js"></script>` in `<body>` after canvas
+- [ ] No additional elements (keep minimal)
+
+**`src/main.js` Validation Checklist:**
+- [ ] Line count ≤ 100 (use `wc -l` or equivalent)
+- [ ] Import Three.js core: `import * as THREE from 'three';`
+- [ ] Import OrbitControls: `import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';` (note `/jsm/` path and `.js` extension)
+- [ ] Scene created with background `0x1a1a2e`
+- [ ] PerspectiveCamera with FOV between 45-75° (suggest 75°)
+- [ ] Camera positioned at Z=5 or similar (frames cube with margin)
+- [ ] WebGLRenderer attached to `document.querySelector('#app')`
+- [ ] Renderer size set to `window.innerWidth`, `window.innerHeight`
+- [ ] Renderer pixel ratio set to `window.devicePixelRatio`
+- [ ] BoxGeometry(1, 1, 1) created
+- [ ] MeshStandardMaterial created (not MeshBasicMaterial)
+- [ ] Mesh created from geometry + material and added to scene
+- [ ] AmbientLight added to scene with intensity ~0.5
+- [ ] DirectionalLight added to scene with intensity ~0.5, positioned at (5, 5, 5) or similar
+- [ ] OrbitControls instantiated with camera and renderer.domElement
+- [ ] `controls.enableDamping = true` set
+- [ ] Animation function defined using `requestAnimationFrame`
+- [ ] Cube rotation on X axis (`cube.rotation.x += delta`)
+- [ ] Cube rotation on Y axis (`cube.rotation.y += delta`)
+- [ ] `controls.update()` called in animation loop
+- [ ] `renderer.render(scene, camera)` called in animation loop
+- [ ] Window resize event listener registered
+- [ ] Resize handler updates `camera.aspect` to new ratio
+- [ ] Resize handler calls `camera.updateProjectionMatrix()`
+- [ ] Resize handler calls `renderer.setSize()` with new dimensions
+
+**`src/style.css` Validation Checklist:**
+- [ ] Universal selector reset: `* { margin: 0; padding: 0; box-sizing: border-box; }`
+- [ ] Full-height HTML/body: `html, body { width: 100%; height: 100%; overflow: hidden; }`
+- [ ] Canvas display override: `#app { display: block; width: 100%; height: 100%; }`
+- [ ] No extra rules beyond these 3 selectors (keep minimal)
+
+**Step 1.3: Compliance Decision Matrix**
+
+| File | Validation Result | Action |
+|------|-------------------|--------|
+| `package.json` | Already confirmed compliant (Context Package) | **Preserve** — no write operation |
+| `index.html` | All checklist items pass | **Preserve** existing file |
+| `index.html` | Any checklist item fails | **Overwrite** with canonical implementation |
+| `src/main.js` | All checklist items pass AND line count ≤ 100 | **Preserve** existing file |
+| `src/main.js` | Any checklist item fails OR line count > 100 | **Overwrite** with canonical implementation |
+| `src/style.css` | All checklist items pass | **Preserve** existing file |
+| `src/style.css` | Any checklist item fails | **Overwrite** with canonical implementation |
+
+### Phase 2: File Generation (Conditional Based on Phase 1)
+
+**Step 2.1: Generate `index.html` (If Non-Compliant)**
 
 **File:** `./index.html`
 
-**Implementation Strategy:**
+**Implementation:**
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -66,20 +121,21 @@ This orbit initializes a minimal Three.js project from scratch with zero framewo
 </html>
 ```
 
+**Total Lines:** 12 (well within reasonable HTML length)
+
 **Key Decisions:**
-- Use `<canvas id="app">` as explicit mount point (not renderer auto-creation) for CSS control
-- Link CSS before script to ensure styles load before Three.js initializes
-- Use `type="module"` on script tag to enable ES6 imports in browser context
-- Path `/src/style.css` resolves correctly via Vite's dev server (serves from project root)
+- `<canvas id="app">` provides explicit mount point for CSS targeting and JS query
+- CSS loaded in `<head>` ensures styles applied before JS executes
+- Script loaded at end of `<body>` ensures DOM (canvas) exists before JS queries it
+- `type="module"` on script tag enables ES6 imports in browser
 
-**Dependencies:**
-- None — this is the entry point that Vite discovers automatically
+---
 
-### Phase 3: CSS Reset and Viewport Styling
+**Step 2.2: Generate `src/style.css` (If Non-Compliant)**
 
 **File:** `./src/style.css`
 
-**Implementation Strategy:**
+**Implementation:**
 ```css
 * {
   margin: 0;
@@ -100,86 +156,52 @@ html, body {
 }
 ```
 
-**Key Decisions:**
-- Universal selector reset (`*`) removes default browser margins/padding (especially critical for `<body>`'s 8px margin)
-- `overflow: hidden` on `html, body` prevents scrollbars from appearing if content overflows
+**Total Lines:** 15
+
+**Rationale for Each Rule:**
+- Universal selector eliminates browser defaults (8px body margin in Chrome/Firefox)
+- Full-height chain on `html, body` required because they don't default to 100% viewport
+- `overflow: hidden` prevents scrollbars if canvas dimensions slightly exceed viewport
 - `display: block` on canvas eliminates 4px inline-element descender space
-- `width: 100%; height: 100%` chain ensures canvas fills viewport without gaps
-- Total lines: 15 (well within budget, no optimization needed)
+- `width: 100%; height: 100%` on canvas inherits full dimensions from body
 
-**Validation Logic:**
-After implementation, visual inspection will confirm:
-- No horizontal scrollbar at any viewport width
-- No vertical scrollbar at any viewport height
-- Canvas edges touch viewport edges with no gaps
+---
 
-### Phase 4: Three.js Scene Implementation
+**Step 2.3: Generate `src/main.js` (If Non-Compliant)**
 
 **File:** `./src/main.js`
 
-**Implementation Strategy (Estimated 45-50 lines):**
+**Implementation (Estimated 40 lines):**
 
-**Section 1: Imports (2 lines)**
 ```javascript
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-```
-- **Critical Path Decision:** Use `/examples/jsm/` path (not deprecated `/examples/js/`)
-- **Risk Mitigation:** `.js` extension is required for Vite module resolution
 
-**Section 2: Scene and Camera Setup (5 lines)**
-```javascript
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a2e);
+
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
-```
-- **FOV Choice:** 75° provides standard perspective (within Intent's 45-75° acceptable range)
-- **Camera Distance:** Z=5 frames cube with margin (cube is 1x1x1 at origin)
-- **Background Color:** `0x1a1a2e` matches Intent requirement exactly
 
-**Section 3: Renderer Setup (3 lines)**
-```javascript
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#app') });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-```
-- **Canvas Mount:** Attach to existing `#app` element (not auto-create)
-- **Pixel Ratio:** Respects device pixel density (prevents blurriness on retina displays)
 
-**Section 4: Geometry and Material (4 lines)**
-```javascript
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
-```
-- **Material Choice:** `MeshStandardMaterial` (not Basic) per Intent requirement
-- **Color:** Bright green (`0x00ff00`) for visibility against dark background
-- **Dimensions:** 1x1x1 cube fits camera FOV at Z=5
 
-**Section 5: Lighting (4 lines)**
-```javascript
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
+
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 directionalLight.position.set(5, 5, 5);
 scene.add(directionalLight);
-```
-- **Ambient Light:** Intensity 0.5 provides base illumination (prevents black faces)
-- **Directional Light:** Intensity 0.5 at (5,5,5) creates visible shading gradient
-- **Risk Mitigation:** Two lights required for MeshStandardMaterial to show depth
 
-**Section 6: OrbitControls (2 lines)**
-```javascript
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-```
-- **Damping Enabled:** Provides smooth camera movement (better UX)
-- **Requires `controls.update()` in animation loop** (documented in next section)
 
-**Section 7: Animation Loop (7 lines)**
-```javascript
 function animate() {
   requestAnimationFrame(animate);
   cube.rotation.x += 0.01;
@@ -188,301 +210,443 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
-```
-- **Rotation Speed:** 0.01 radians/frame ≈ 0.57°/frame at 60fps (visible but not dizzying)
-- **Both Axes:** Rotates on X and Y simultaneously per Intent requirement
-- **Control Update:** Required for damping to work (Context Risk #2 mitigation)
 
-**Section 8: Resize Handler (5 lines)**
-```javascript
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 ```
-- **Aspect Ratio Update:** Prevents cube distortion on window resize
-- **Projection Matrix:** MUST be updated after changing `camera.aspect` (Context Risk #4 mitigation)
 
-**Total Line Count Calculation:**
-- Imports: 2
-- Scene setup: 5
-- Renderer: 3
-- Geometry/Material: 4
-- Lighting: 5
-- Controls: 2
-- Animation loop: 7
-- Resize handler: 5
-- **Grand Total: 33 lines** (well within 100-line constraint)
+**Line Count Analysis:**
+- Imports: 2 lines
+- Scene setup: 2 lines
+- Camera setup: 2 lines
+- Renderer setup: 3 lines
+- Geometry + material + mesh: 3 lines
+- Ambient light: 2 lines
+- Directional light: 3 lines
+- Controls: 2 lines
+- Animation loop: 8 lines (includes function declaration, body, and call)
+- Resize handler: 5 lines
+- Blank lines (section separators): 8 lines
+- **Total: 40 lines** (60% under 100-line budget)
 
-**Whitespace Strategy:**
-- Add 1 blank line between logical sections (8 sections = 7 blank lines)
-- **Adjusted Total: 40 lines** (still 60% under budget)
+**Critical Implementation Details:**
 
-### Phase 5: Execution Order and Dependencies
+1. **OrbitControls Import Path:** Uses `three/examples/jsm/controls/OrbitControls.js` (Three.js 0.160.0+ path with `.js` extension)
+
+2. **Scene Background:** `0x1a1a2e` hex color (dark blue-gray per Intent requirement)
+
+3. **Camera FOV:** 75° (within Intent's 45-75° acceptable range, provides standard perspective)
+
+4. **Camera Position:** Z=5 frames 1x1x1 cube with margin (cube vertices at ±0.5, camera FOV captures full cube plus space)
+
+5. **Renderer Pixel Ratio:** `window.devicePixelRatio` prevents blurriness on high-DPI displays (Retina, 4K)
+
+6. **Material Type:** `MeshStandardMaterial` (physically-based, requires lights) not `MeshBasicMaterial` (unlit)
+
+7. **Cube Color:** `0x00ff00` (bright green) for high contrast against dark background and visibility of shading gradients
+
+8. **Light Intensities:** Both 0.5 (total 1.0 combined) provides balanced illumination without overexposure
+
+9. **Directional Light Position:** (5, 5, 5) creates visible shading gradient across cube faces (not flat lighting)
+
+10. **Controls Damping:** Enabled for smooth camera interpolation (requires `controls.update()` in loop)
+
+11. **Rotation Speed:** 0.01 radians/frame ≈ 0.57°/frame ≈ 34°/second at 60fps (visible but not dizzying)
+
+12. **Rotation Axes:** Both X and Y axes rotate simultaneously per Intent requirement
+
+13. **Control Update Sequence:** `controls.update()` called BEFORE `renderer.render()` to apply camera changes in current frame
+
+14. **Resize Handler Sequence:** Update aspect → update projection matrix → resize renderer (order critical)
+
+### Phase 3: Post-Generation Validation
+
+**Step 3.1: Automated Checks**
+
+| Check | Command | Expected Result |
+|-------|---------|-----------------|
+| Line count | `wc -l src/main.js` | ≤ 100 |
+| File count | `ls -1 | wc -l` (root) + `ls -1 src/ | wc -l` | 4 total (index.html, package.json, src/main.js, src/style.css) |
+| Import syntax | `grep -c "^import " src/main.js` | 2 (Three.js core + OrbitControls) |
+| No console.log | `grep -c "console.log" src/main.js` | 0 |
+
+**Step 3.2: Manual Validation Protocol**
+
+These checks require human execution (Tier 2 supervision requirement):
+
+1. **Dev Server Startup:**
+   - Run `npm install` (if `node_modules/` missing)
+   - Run `npm run dev`
+   - Verify terminal shows `Local: http://localhost:5173` or incremented port
+   - Verify no error messages in terminal
+
+2. **Visual Rendering:**
+   - Open browser to `http://localhost:5173`
+   - Confirm rotating green cube visible within 2 seconds
+   - Confirm dark blue-gray background (not black, not white)
+   - Confirm cube shows shading gradient (light/dark faces, not flat color)
+
+3. **Interactive Controls:**
+   - Click and drag mouse across canvas
+   - Confirm camera orbits around cube smoothly (no jerky snapping)
+   - Release mouse, confirm camera stops smoothly (no excessive drift)
+
+4. **Viewport Coverage:**
+   - Inspect viewport edges for any white gaps or borders
+   - Check for horizontal scrollbar (should be absent)
+   - Check for vertical scrollbar (should be absent)
+
+5. **Responsive Behavior:**
+   - Resize browser window (drag corner, maximize, restore)
+   - Confirm canvas reflows to new dimensions immediately
+   - Confirm cube maintains 1:1:1 proportions (not stretched/squashed)
+
+6. **Console Errors:**
+   - Open browser DevTools console
+   - Confirm zero JavaScript errors during 60 seconds of operation
+   - Confirm zero warnings related to Three.js or OrbitControls
+
+### Phase 4: Execution Order and Dependencies
+
+**Dependency Graph:**
+```
+package.json (already compliant)
+  ↓
+src/ directory (must exist)
+  ↓
+┌─────────────┬──────────────┬──────────────┐
+│ index.html  │ src/main.js  │ src/style.css│
+└─────────────┴──────────────┴──────────────┘
+       ↓              ↓              ↓
+  (references)   (imports)      (styles)
+       ↓              ↓              ↓
+  HTML loads → JS executes → CSS applies
+```
 
 **File Write Sequence:**
-1. Create `src/` directory (if not exists)
-2. Write `./index.html` (no dependencies)
-3. Write `./src/style.css` (no dependencies)
-4. Write `./src/main.js` (depends on HTML structure for `#app` query)
+1. Check if `src/` directory exists; create if missing
+2. Validate existing `index.html` → overwrite if non-compliant
+3. Validate existing `src/style.css` → overwrite if non-compliant
+4. Validate existing `src/main.js` → overwrite if non-compliant
+5. `package.json` not written (already compliant per Context Package)
 
-**Runtime Initialization Sequence (within `main.js`):**
-1. Import modules (Three.js core, OrbitControls)
-2. Initialize scene and set background
-3. Create camera with aspect ratio
-4. Create renderer attached to `#app` canvas
-5. Create geometry + material → mesh → add to scene
-6. Add lights to scene (BEFORE first render)
-7. Initialize OrbitControls (AFTER renderer exists)
-8. Start animation loop
-9. Register resize event listener
-
-**Critical Ordering Dependencies:**
-- Lights must be added to scene before first `renderer.render()` call (else cube renders black)
-- OrbitControls requires `renderer.domElement` (must instantiate renderer first)
-- Resize handler must call `camera.updateProjectionMatrix()` after updating aspect ratio
+**Runtime Initialization Sequence (Inside Browser):**
+1. Browser loads `index.html`
+2. Browser parses `<link rel="stylesheet" href="/src/style.css">` → fetches CSS from Vite
+3. Browser applies CSS rules to `<canvas id="app">`
+4. Browser parses `<script type="module" src="/src/main.js">` → fetches JS from Vite
+5. Browser parses ES6 imports → fetches `three` and `three/examples/jsm/controls/OrbitControls.js` from node_modules/
+6. Browser executes `main.js`:
+   - Creates WebGL context from `#app` canvas
+   - Initializes scene, camera, renderer, geometry, lights, controls
+   - Starts `animate()` loop via `requestAnimationFrame`
+7. GPU renders frames at ~60fps
+8. OrbitControls listens for mouse events on canvas
+9. Window resize listener updates camera/renderer on viewport changes
 
 ## Risk Surface
 
-### Risk 1: OrbitControls Import Path Failure
-**Probability:** Low (mitigated by Context Package research)  
-**Impact:** High (scene renders but controls don't work, console errors)
+### Risk 1: Existing Files Are Compliant But Orbit Reruns Anyway
+**Probability:** Medium  
+**Impact:** Low (unnecessary file overwrites, no functional impact)
 
-**Root Cause:**  
-Three.js 0.160.0+ changed addon paths from `/examples/js/` to `/examples/jsm/`.
+**Scenario:**
+Phase 1 validation passes for all files, but ORBITAL system triggers orbit a6b4c09a despite orbit c71c2625 completing successfully.
 
-**Mitigation Applied:**
-- Use exact path: `three/examples/jsm/controls/OrbitControls.js`
-- Include `.js` extension (required for Vite's ES module resolution)
-- Cross-reference against Three.js 0.160.0 official documentation
+**Root Causes:**
+- Human explicitly requested re-execution for verification purposes
+- ORBITAL metadata inconsistency (orbit status not properly marked complete)
+- Repository state diverged from ORBITAL tracking (files manually edited post-orbit)
 
-**Detection Method:**
-- Browser console will show `ERR_MODULE_NOT_FOUND` if path is incorrect
-- Visual test: mouse drag should rotate camera (no console errors)
+**Consequence:**
+If all files pass validation, this orbit will preserve them (no overwrites). Total file writes: 0. Human supervision will confirm files are correct.
 
-**Rollback Plan:**
-If import fails, fallback to inline controls implementation (adds ~10 lines to `main.js`).
+**Mitigation:**
+- Phase 1 validation checklist explicitly compares existing files against 28+ compliance criteria
+- Preserve files that pass all checks to minimize filesystem churn
+- Document in code_generation.md which files were preserved vs. overwritten
 
 ---
 
-### Risk 2: CSS Reset Incomplete — Scrollbars Appear
-**Probability:** Low (pattern well-established in Context)  
+### Risk 2: Line Count in `main.js` Approaches 100-Line Limit
+**Probability:** Very Low (current estimate: 40 lines)  
+**Impact:** Low (requires minor refactoring)
+
+**Trigger Conditions:**
+- Adding verbose comments for educational purposes
+- Implementing helper functions for readability
+- Expanding whitespace between logical sections
+- Multi-line formatting of function arguments
+
+**Current Headroom:** 60 lines (60% under budget)
+
+**Mitigation Strategy:**
+- Strict no-comments policy (code self-documents via clear naming)
+- No helper functions (inline all logic in main scope)
+- Minimal whitespace (1 blank line between sections maximum)
+- Compact but readable formatting (single-line constructors where arguments fit)
+
+**Rollback Plan:**
+If line count exceeds 100:
+1. Remove all section separator blank lines (saves 8 lines → 32 total)
+2. Combine scene setup into single line: `const scene = new THREE.Scene(); scene.background = new THREE.Color(0x1a1a2e);` (saves 1 line)
+3. Still have massive headroom (32 lines vs. 100-line budget)
+
+---
+
+### Risk 3: OrbitControls Import Path Fails in Browser
+**Probability:** Low (correct path in implementation)  
+**Impact:** High (controls non-functional, console error, violates acceptance criteria)
+
+**Failure Signature:**
+```
+Failed to resolve module specifier "three/examples/jsm/controls/OrbitControls.js"
+```
+
+**Root Cause Validation:**
+- Implementation uses `three/examples/jsm/controls/OrbitControls.js` (correct for Three.js 0.160.0+)
+- Includes `.js` file extension (required for Vite's ES module resolution)
+- Three.js `package.json` exports `/examples/jsm/*` paths via `"exports"` field
+
+**Mitigation:**
+- Hardcode correct path in Step 2.3 implementation
+- Phase 3 manual validation will catch import errors via browser console inspection
+- If error occurs, validate Three.js version in `package.json` is ≥0.160.0
+
+**Detection:**
+Browser console will show module resolution error immediately on page load (before any rendering).
+
+---
+
+### Risk 4: CSS Reset Incomplete → Scrollbars Appear
+**Probability:** Low (canonical CSS in Step 2.2)  
 **Impact:** Medium (violates acceptance criterion, obvious visual defect)
 
-**Root Cause:**
-Browser default styles (8px body margin, inline canvas descender space, overflow behavior).
+**Failure Modes:**
 
-**Mitigation Applied:**
-- Universal selector reset: `* { margin: 0; padding: 0; }`
-- Explicit overflow control: `overflow: hidden` on `html, body`
-- Canvas display override: `display: block` on `#app`
-- Full-height chain: `width: 100%; height: 100%` on `html`, `body`, `#app`
+| Missing Rule | Visual Defect |
+|--------------|---------------|
+| `* { margin: 0; }` | 8px white border, both scrollbars |
+| `overflow: hidden` | 1-2px overflow triggers scrollbars |
+| `#app { display: block; }` | 4px vertical gap, vertical scrollbar |
 
-**Detection Method:**
-- Visual inspection: open in browser, check for any scrollbars
-- Resize window to various dimensions (scrollbars should never appear)
-- Test in Chrome, Firefox, Safari (different default margins)
+**Mitigation:**
+- Step 2.2 implementation includes all 3 required selectors from Pattern Library
+- Phase 3.2 manual validation (step 4) explicitly checks for scrollbars
+- Test at multiple window sizes (narrow, wide, tall, square)
 
-**Rollback Plan:**
-If scrollbars appear, add `position: fixed; top: 0; left: 0;` to `#app` (less ideal but guaranteed full-viewport).
-
----
-
-### Risk 3: MeshStandardMaterial Renders Black
-**Probability:** Low (lights explicitly added before render)  
-**Impact:** High (cube invisible, looks like render failure)
-
-**Root Cause:**
-`MeshStandardMaterial` requires lights to be visible (unlike `MeshBasicMaterial`).
-
-**Mitigation Applied:**
-- Add `AmbientLight` at intensity 0.5 (uniform base illumination)
-- Add `DirectionalLight` at intensity 0.5, position (5,5,5) (creates shading gradient)
-- Both lights added to scene BEFORE calling `animate()` function
-
-**Detection Method:**
-- Visual inspection: cube should show color gradient from light to dark faces
-- If cube is solid black silhouette, lights are missing or misconfigured
-
-**Rollback Plan:**
-If lights fail, temporarily switch to `MeshBasicMaterial` for debugging (ignores lights, always visible).
+**Detection:**
+Visual inspection: any scrollbar (horizontal or vertical) indicates CSS reset failure.
 
 ---
 
-### Risk 4: Line Count Exceeds 100 Lines
-**Probability:** Very Low (current estimate: 40 lines)  
-**Impact:** Low (violates code quality gate)
+### Risk 5: MeshStandardMaterial Renders Black
+**Probability:** Very Low (lights explicitly added in Step 2.3)  
+**Impact:** High (cube invisible, looks like rendering failure)
 
 **Root Cause:**
-Verbose coding style, comments, helper functions, excessive whitespace.
+`MeshStandardMaterial` requires lights in scene to be visible. Without lights, material absorbs all light (renders black).
 
-**Mitigation Applied:**
-- No inline comments (code is self-documenting)
-- No helper functions (all logic inlined)
-- Minimal whitespace (1 blank line between sections only)
-- Compact initialization (multiple operations per line where readable)
+**Mitigation in Implementation:**
+- Step 2.3 adds `AmbientLight` (intensity 0.5) for base illumination
+- Step 2.3 adds `DirectionalLight` (intensity 0.5, position 5,5,5) for directional shading
+- Both lights added to scene BEFORE `animate()` function call
+- Total light intensity: 1.0 (sufficient for visible color and shading)
 
-**Current Line Budget:**
-- Implementation: 33 lines
-- Whitespace (section breaks): 7 lines
-- **Total: 40 lines (60% headroom)**
-
-**Detection Method:**
-Automated line count: `wc -l src/main.js` must return ≤ 100.
-
-**Rollback Plan:**
-If approaching limit, remove whitespace between sections (reduces to 33 lines).
+**Detection:**
+Phase 3.2 manual validation (step 2) confirms cube shows color gradient (not flat black).
 
 ---
 
-### Risk 5: Window Resize Distorts Cube Aspect Ratio
-**Probability:** Very Low (resize handler includes projection matrix update)  
-**Impact:** High (obvious visual defect on resize)
+### Risk 6: Window Resize Distorts Cube Aspect Ratio
+**Probability:** Low (correct sequence in Step 2.3)  
+**Impact:** High (obvious visual bug on resize)
 
-**Root Cause:**
-Forgetting to call `camera.updateProjectionMatrix()` after changing `camera.aspect`.
+**Technical Requirement:**
+After window resize, must update both:
+1. `camera.aspect` (new width/height ratio)
+2. `camera.updateProjectionMatrix()` (recompute projection matrix using new aspect)
 
-**Mitigation Applied:**
-- Resize event listener updates `camera.aspect` to new window ratio
-- **Critical line:** `camera.updateProjectionMatrix()` called immediately after aspect change
-- Renderer size updated to match new window dimensions
+**Implementation Sequence:**
+```javascript
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;  // Step 1
+  camera.updateProjectionMatrix();                          // Step 2 (critical)
+  renderer.setSize(window.innerWidth, window.innerHeight);  // Step 3
+});
+```
 
-**Detection Method:**
-- Resize browser window (drag corner, maximize, restore)
-- Cube should remain a perfect cube (not stretched into rectangle)
+**Why This Order Matters:**
+- Projection matrix caches aspect ratio during computation
+- Changing `camera.aspect` without calling `updateProjectionMatrix()` leaves matrix stale
+- Stale matrix uses old aspect ratio → cube appears stretched/squashed
 
-**Rollback Plan:**
-If distortion occurs, verify projection matrix update is present and sequenced correctly.
+**Mitigation:**
+- Step 2.3 implementation includes correct 3-line sequence
+- Phase 3.2 manual validation (step 5) explicitly tests resize behavior
 
----
-
-### Risk 6: Controls Feel "Sticky" or Unresponsive
-**Probability:** Low (damping enabled + update called in loop)  
-**Impact:** Medium (degrades UX, violates "smooth interaction" requirement)
-
-**Root Cause:**
-Missing `controls.update()` in animation loop (required when damping is enabled).
-
-**Mitigation Applied:**
-- Set `controls.enableDamping = true` explicitly
-- Call `controls.update()` in animation loop BEFORE `renderer.render()`
-
-**Detection Method:**
-- Manual testing: drag mouse to rotate camera
-- Camera movement should be smooth, not jerky or delayed
-
-**Rollback Plan:**
-If controls feel sticky, verify `controls.update()` is present in loop and sequenced before render.
+**Detection:**
+Resize browser window → cube should remain 1:1:1 proportions (perfect cube, not rectangular).
 
 ---
 
-### Risk 7: Vite Dev Server Fails to Start
-**Probability:** Very Low (dependencies already installed, package.json compliant)  
-**Impact:** Medium (blocks testing, does not affect production)
+### Risk 7: `controls.update()` Missing from Animation Loop
+**Probability:** Very Low (explicitly included in Step 2.3)  
+**Impact:** Medium (controls feel jerky, violates UX requirement)
 
-**Root Cause:**
-- Port 5173 already in use (Vite will auto-increment)
-- Missing `node_modules/` (requires `npm install`)
-- Node.js version < 18.0.0 (Vite 5.x requirement)
+**Technical Requirement:**
+OrbitControls with `enableDamping = true` requires `controls.update()` every frame to interpolate camera position smoothly.
 
-**Mitigation Applied:**
-- `package.json` already exists with correct dependencies
-- `"engines.node": ">=18.0.0"` enforces runtime requirement
-- Vite handles port conflicts automatically (increments to 5174, 5175, etc.)
+**Implementation:**
+```javascript
+function animate() {
+  requestAnimationFrame(animate);
+  cube.rotation.x += 0.01;
+  cube.rotation.y += 0.01;
+  controls.update();              // Required for damping
+  renderer.render(scene, camera);
+}
+```
 
-**Detection Method:**
-- Run `npm run dev` and verify terminal output shows `Local: http://localhost:5173`
-- Browser should open to dev server (or user navigates manually)
+**Why This Matters:**
+- Damping creates smooth camera movement by interpolating over multiple frames
+- Without `update()`, camera "snaps" to position instead of smoothly following mouse
+- Violates Intent requirement for "smooth, interactive 3D scene"
 
-**Rollback Plan:**
-If server fails to start, check Node.js version (`node --version`) and run `npm install` if `node_modules/` is missing.
+**Mitigation:**
+- Step 2.3 includes `controls.update()` before `renderer.render()` in animation loop
+- Phase 3.2 manual validation (step 3) tests camera movement smoothness
+
+**Detection:**
+Mouse drag should produce fluid camera orbit. If movement feels "snappy" or "sticky", `update()` is missing.
+
+---
+
+### Risk 8: Vite Dev Server Fails to Start
+**Probability:** Very Low  
+**Impact:** Low (blocks manual testing only, does not affect code correctness)
+
+**Common Causes:**
+
+| Cause | Error | Resolution |
+|-------|-------|------------|
+| Port 5173 in use | `EADDRINUSE` | Vite auto-increments to 5174, 5175, etc. |
+| Missing `node_modules/` | `Cannot find module 'vite'` | Run `npm install` |
+| Node.js < 18.0.0 | Version error | Upgrade Node.js (enforced by `"engines"` field) |
+
+**Mitigation:**
+- `package.json` includes `"engines": { "node": ">=18.0.0" }` to enforce minimum version
+- Vite handles port conflicts gracefully (logs new port to console)
+- Phase 3.1 includes `npm install` step before `npm run dev`
+
+**Detection:**
+Terminal output should show:
+```
+VITE v5.x.x  ready in XXX ms
+➜  Local:   http://localhost:5173/
+```
 
 ## Scope Estimate
 
-### Orbit Count: 1
-This is a single-orbit implementation. All 3 files can be generated in one execution phase with no intermediate review gates.
+### Orbit Count: 1 (Single-Orbit Completion)
 
-### Complexity Assessment: Low
-- **Codebase Surface:** 3 new files, 0 modifications (existing `package.json` is compliant)
-- **Line Count:** ~40 lines JS, ~15 lines CSS, ~12 lines HTML = ~67 total lines
-- **External Dependencies:** 2 (Three.js, Vite) — both already declared in `package.json`
-- **Integration Points:** 1 (Vite dev server → HTML → JS imports → Three.js)
-- **Risk Surface:** 7 identified risks, all with concrete mitigations
+This orbit completes the entire implementation in one execution phase. No follow-up orbits required.
 
-**Rationale for Low Complexity:**
-- No existing code to refactor or preserve
-- No API contracts to maintain
-- No database migrations or data transformations
-- No multi-service coordination
+**Rationale:**
+- All 4 files can be validated/generated in single pass
+- No external API integrations requiring iterative testing
+- No complex multi-step migrations
 - Deterministic execution (no async operations, no network requests)
 
-### Work Phases
+### Complexity Assessment: Low
 
-**Phase 1: File Generation (Estimated: 30 seconds)**
-- Create `src/` directory
-- Write `index.html` (12 lines)
-- Write `src/style.css` (15 lines)
-- Write `src/main.js` (40 lines)
-- Total: 67 lines across 3 files
+**Codebase Surface:**
+- Files to validate/generate: 3 (index.html, src/main.js, src/style.css)
+- Files to preserve: 1 (package.json — already compliant)
+- Total lines of code: ~67 (12 HTML + 15 CSS + 40 JS)
+- External dependencies: 2 (Three.js, Vite — already declared in package.json)
+- Integration points: 1 (Vite dev server → HTML → JS imports → Three.js)
 
-**Phase 2: Dependency Installation (Estimated: 20-60 seconds)**
-- User runs `npm install` (downloads Three.js + Vite from npm registry)
-- ~50MB download (Three.js ~15MB, Vite ~35MB with dependencies)
-- Speed depends on network latency
+**Risk Profile:**
+- Security surface: None (no user input, no network requests, no file system access beyond dev server)
+- Data persistence: None (no database, no localStorage, no cookies)
+- Service dependencies: None (no backend APIs, no third-party services)
+- Browser compatibility: High (WebGL 2.0 supported in 95%+ of modern browsers)
 
-**Phase 3: Dev Server Startup (Estimated: 2-5 seconds)**
-- User runs `npm run dev`
-- Vite starts dev server on port 5173
-- Browser opens to `http://localhost:5173`
+**Testing Requirements:**
+- Automated checks: 4 (line count, file count, import syntax, no debug code)
+- Manual checks: 6 (rendering, controls, viewport, resize, console errors, visual fidelity)
+- Total validation time: ~3-5 minutes (human supervision)
 
-**Phase 4: Visual Validation (Estimated: 10-15 seconds)**
-- Human observer confirms:
-  - Rotating cube visible
-  - Mouse drag rotates camera
-  - Window resize maintains aspect ratio
-  - No console errors
-  - No scrollbars
+**Complexity Factors:**
+| Factor | Rating | Justification |
+|--------|--------|---------------|
+| Code volume | Very Low | ~67 total lines across 3 files |
+| Logic complexity | Very Low | No conditionals, loops, or algorithms (imperative setup + render loop) |
+| Dependency management | Low | 2 dependencies, both stable and well-documented |
+| Integration complexity | Very Low | Single integration point (Vite → Three.js) |
+| Testing complexity | Low | 10 total checks (4 automated, 6 manual) |
+| **Overall Complexity** | **Low** | Minimal risk, high confidence in success |
 
-**Total Time Budget:**
-- Generation: 30 seconds
-- Install: 60 seconds (first-time)
-- Startup + validation: 20 seconds
-- **End-to-End: ~110 seconds (~2 minutes)**
+### Work Phase Breakdown
 
-**Acceptance Criterion Alignment:**
-Intent requires "cube visible within 2 seconds of `npm run dev`" — Vite's dev server startup (~2-5 seconds) meets this threshold. First-time `npm install` is excluded from the 2-second timer (standard practice for dependency setup).
+**Phase 1: File Validation (Estimated: 30 seconds)**
+- Read 3 existing files (index.html, src/main.js, src/style.css)
+- Execute 28+ validation checks across all files
+- Determine compliance status for each file
+- Generate compliance report for human review
 
-### Resource Requirements
+**Phase 2: Conditional File Generation (Estimated: 10 seconds)**
+- Write only non-compliant files (0-3 files depending on validation results)
+- If all files compliant: 0 write operations
+- If all files non-compliant: 3 write operations (~67 lines total)
+- File write operations are atomic (no partial failures)
 
-**Compute:**
-- File generation: Negligible (< 1MB memory, < 1 second CPU)
-- Vite dev server: ~100MB RAM, minimal CPU (serves static files)
-- Browser rendering: ~50-100MB RAM, GPU-accelerated (WebGL context)
+**Phase 3: Post-Generation Validation (Estimated: 10 seconds automated + 3-5 minutes manual)**
 
-**Storage:**
-- Generated files: ~2KB total (HTML + CSS + JS)
-- Dependencies: ~50MB (node_modules/ after npm install)
+**Automated Checks (10 seconds):**
+- Line count verification
+- File count verification
+- Import syntax verification
+- Debug code detection
 
-**Network:**
-- Dependency download: ~50MB (one-time, cached locally)
-- Dev server: No external requests (localhost only)
+**Manual Checks (3-5 minutes):**
+- Dev server startup (npm install + npm run dev)
+- Visual rendering confirmation (cube visible, correct colors, shading)
+- Interactive controls testing (mouse drag, smooth movement)
+- Viewport coverage inspection (no scrollbars, no gaps)
+- Responsive behavior testing (window resize, aspect ratio maintained)
+- Console error monitoring (zero errors during 60 seconds)
 
-### Confidence Level: High
+**Total Estimated Time:**
+- Generation: 40 seconds (Phase 1 + Phase 2)
+- Automated validation: 10 seconds (Phase 3 automated)
+- Human supervision: 3-5 minutes (Phase 3 manual)
+- **End-to-End: ~6 minutes** from orbit start to human approval
 
-**Success Indicators:**
-- All 4 files exist in repository after generation
-- `wc -l src/main.js` returns ≤ 100
-- `npm run dev` starts without errors
-- Browser renders rotating cube with interactive camera controls
-- Zero console errors during 60 seconds of operation
+**Confidence Level: High (95%)**
+
+**Success Probability Breakdown:**
+- Code generation success: 99% (deterministic template-based generation)
+- Dependency resolution success: 98% (Three.js and Vite are stable, well-maintained packages)
+- Vite dev server startup: 95% (assumes Node.js 18+ installed, port 5173 available or auto-increment)
+- Visual rendering success: 97% (standard Three.js patterns, no exotic features)
+- Interactive controls success: 96% (OrbitControls is mature, well-tested addon)
 
 **Failure Modes (Low Probability):**
-- Import path typo (caught by browser console)
-- CSS reset incomplete (caught by visual inspection)
-- Line count exceeds budget (caught by automated check)
+- Three.js version mismatch causing import path errors (mitigated by hardcoded 0.160.0+ path)
+- Browser WebGL context creation failure (mitigated by modern browser requirement in Intent)
+- CSS specificity conflicts (mitigated by minimal, scoped CSS with no external stylesheets)
 
-All failure modes have concrete detection methods and rollback plans documented in Risk Surface section.
+**Rollback Strategy:**
+If orbit fails validation, human can:
+1. Review generated files in `.orbital/artifacts/a6b4c09a-283b-48f1-9386-68f4ef295656/code_generation.md`
+2. Manually edit non-compliant files
+3. Re-run `npm run dev` for immediate validation
+4. Worst case: delete generated files and revert to orbit c71c2625 state
 
 ## Human Modifications
 
