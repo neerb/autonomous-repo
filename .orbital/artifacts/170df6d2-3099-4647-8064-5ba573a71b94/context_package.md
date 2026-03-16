@@ -1,271 +1,200 @@
-# Context Package: React Calculator Web App
+# Context Package: React Calculator Web App - Enhanced Testing & Validation
 
 ## Codebase References
 
-### Current Repository State
-The repository at https://github.com/neerb/autonomous-repo is in minimal initialization state with only:
+### Core Application Files
 
-- `README.md` — Basic repository description file with minimal content
+**Entry Point:**
+- `index.html` — Root HTML file mounting the React application
+- `src/main.jsx` — React application bootstrap, renders App component into DOM
 
-### Files to be Created
-This orbit will establish the foundational structure for a React application. Expected file creation includes:
+**Component Architecture:**
+- `src/App.jsx` — Top-level application component (likely wraps Calculator)
+- `src/components/Calculator.jsx` — Main calculator container managing state and orchestration
+- `src/components/Display.jsx` — Display component showing current value/result
+- `src/components/Button.jsx` — Reusable button component for number and operation inputs
 
-- `package.json` — Project manifest with dependencies (react, react-dom, build tooling)
-- `package-lock.json` or `yarn.lock` — Dependency lock file for reproducible builds
-- `src/` — Source code directory containing all application code
-- `src/index.js` or `src/main.jsx` — Application entry point that mounts React to the DOM
-- `src/App.js` or `src/App.jsx` — Root React component
-- `src/components/` — Directory for React components (Calculator, Display, Button, etc.)
-- `public/` — Static assets directory containing `index.html` and favicon
-- `public/index.html` — HTML shell that hosts the React application
-- `.gitignore` — Git exclusion rules for node_modules, build artifacts
-- Build configuration files (dependent on scaffolding tool choice)
+**Business Logic:**
+- `src/utils/calculator.js` — Pure calculation logic for arithmetic operations (add, subtract, multiply, divide)
 
-### Files to be Modified
-- `README.md` — Update with project setup instructions, development commands, and project description
+**Styling:**
+- `src/App.css` — Application-level styles
+- `src/components/Calculator.css` — Calculator container styles
+- `src/components/Display.css` — Display component styles
+- `src/components/Button.css` — Button component styles
+- `src/index.css` — Global CSS reset and base styles
 
-### No Existing Code Surfaces
-This is a greenfield initialization with no existing code to integrate with, refactor, or maintain compatibility against.
+**Build Configuration:**
+- `vite.config.js` — Vite bundler configuration with React plugin
+- `package.json` — Dependencies, scripts, and project metadata
+
+### Artifact Storage
+
+**Prior Orbit Artifacts:**
+- `.orbital/artifacts/170df6d2-3099-4647-8064-5ba573a71b94/intent_document.md`
+- `.orbital/artifacts/170df6d2-3099-4647-8064-5ba573a71b94/context_package.md`
+- `.orbital/artifacts/170df6d2-3099-4647-8064-5ba573a71b94/proposal_record.md`
+- `.orbital/artifacts/170df6d2-3099-4647-8064-5ba573a71b94/code_generation.md`
+- `.orbital/artifacts/170df6d2-3099-4647-8064-5ba573a71b94/test_results.md`
+- `.orbital/artifacts/170df6d2-3099-4647-8064-5ba573a71b94/verification_protocol.md`
+
+These documents contain the original implementation context — the verification strategy must align with implementation decisions documented in `code_generation.md` and `proposal_record.md`.
 
 ## Architecture Context
 
-### System Boundaries
-This orbit establishes a **standalone client-side application** with the following architectural characteristics:
+### Application Architecture
 
-- **Deployment Model:** Local development server only (no production hosting in this orbit)
-- **Execution Environment:** Browser JavaScript runtime (no Node.js server component)
-- **State Management:** Component-local state only (no global state management library required for basic calculator)
-- **Data Flow:** Unidirectional data flow following React principles (props down, events up)
+**Technology Stack:**
+- **Framework:** React 18.2.0 (modern functional components with hooks)
+- **Build Tool:** Vite 5.0.8 (fast ES module-based dev server and bundler)
+- **Module System:** ES modules (`"type": "module"` in package.json)
+- **Runtime:** Node.js >=18.0.0 (specified in package.json engines)
 
-### Component Architecture Pattern
-The calculator will follow a **container/presentation component split**:
+**Component Hierarchy:**
+```
+index.html
+  └─ src/main.jsx
+      └─ src/App.jsx
+          └─ src/components/Calculator.jsx
+              ├─ src/components/Display.jsx
+              └─ src/components/Button.jsx (multiple instances)
+```
 
-- **Container Component (Calculator):** Manages calculation state, operation logic, and orchestrates child components
-- **Presentation Components:** Display (shows numbers), ButtonGrid (renders calculator buttons), Button (individual button with click handlers)
+**Data Flow Pattern:**
+The calculator follows a unidirectional data flow typical of React applications:
+1. User interacts with Button components
+2. Calculator component maintains state (current value, previous value, selected operation)
+3. Calculator delegates arithmetic operations to `src/utils/calculator.js`
+4. Results flow down to Display component via props
 
-### Technology Stack Decisions
+**State Management:**
+Given the component structure and pure frontend nature, state management likely uses React's `useState` hook within Calculator.jsx. No external state management library (Redux, Zustand) is present in dependencies.
 
-#### Build Tool Selection
-Three viable options for React project initialization:
+### Testing Surface Requirements
 
-1. **Vite** (Recommended) — Modern, fast development server with minimal configuration
-2. **Create React App** — Traditional scaffolding tool with comprehensive defaults
-3. **Manual Setup** — Custom webpack/Rollup configuration (excessive for this scope)
+**Unit Testing Targets:**
+- `src/utils/calculator.js` — Pure functions for arithmetic operations (ideal for unit tests)
+- Individual component rendering and prop handling
 
-**Recommendation:** Vite for superior development experience (fast hot module replacement) and modern defaults (ES modules, optimized builds).
+**Integration Testing Targets:**
+- User interaction flows: button click → calculation → display update
+- Operation chaining (e.g., "5 + 3 = 8, then × 2 = 16")
+- State transitions between operations
 
-### State Management Strategy
-Given the **frontend-only constraint** and **basic operations scope**, the calculator state will be managed through:
-
-- React `useState` hooks for display value, pending operation, stored operand
-- No need for Context API, Redux, Zustand, or other state management libraries
-- State structure: `{ display: string, operator: string | null, operand: number | null, waitingForOperand: boolean }`
-
-### Calculation Logic Location
-All arithmetic operations will be implemented as **pure functions** within the Calculator component or extracted to a utility module (`src/utils/calculator.js`) if complexity warrants separation. No external math libraries needed for basic operations.
+**Environment Considerations:**
+- Vite dev server required for integration tests that need DOM environment
+- Tests must work with ES module imports (no CommonJS require)
+- React Testing Library compatibility with React 18 concurrent features
 
 ## Pattern Library
 
-### React Patterns to Establish
+### Existing Patterns (Inferred from Repository Structure)
 
-#### Component File Structure
-```
-src/components/
-├── Calculator.jsx       # Container component with state
-├── Display.jsx          # Presentation component for numeric display
-├── ButtonGrid.jsx       # Layout component for button arrangement
-└── Button.jsx           # Reusable button presentation component
-```
+**Component Organization:**
+- Components live in `src/components/` directory
+- Co-located CSS files (Component.jsx has Component.css sibling)
+- Single responsibility: Button, Display, Calculator separation
 
-#### Naming Conventions
-- **Components:** PascalCase (e.g., `Calculator`, `ButtonGrid`)
-- **Files:** PascalCase matching component name with `.jsx` or `.js` extension
-- **Props:** camelCase (e.g., `onClick`, `displayValue`, `isOperator`)
-- **Event Handlers:** `handle` prefix (e.g., `handleNumberClick`, `handleOperatorClick`)
-- **CSS Classes:** kebab-case or BEM methodology (e.g., `calculator-display`, `button--operator`)
+**File Naming Conventions:**
+- PascalCase for React component files (`Calculator.jsx`, `Button.jsx`)
+- camelCase for utility modules (`calculator.js`)
+- CSS files match component names exactly
 
-#### State Management Pattern
-```javascript
-// Hook-based state management in functional components
-const [display, setDisplay] = useState('0');
-const [operator, setOperator] = useState(null);
-```
+**Module Patterns:**
+- ES6 module syntax (import/export)
+- `.jsx` extension for React components (TypeScript types defined but not used for implementation)
+- Utility functions separated into `src/utils/` directory
 
-#### Event Handling Pattern
-```javascript
-// Event handlers defined within container component
-const handleNumberClick = (number) => {
-  // State update logic
-};
+### Testing Patterns to Establish
 
-// Passed as props to presentation components
-<Button value="7" onClick={() => handleNumberClick('7')} />
-```
+**Test File Conventions (to be defined in this orbit):**
+- Test files should live in `src/__tests__/` or co-located as `*.test.js` files
+- Test naming: `calculator.test.js`, `Calculator.test.jsx`, `Button.test.jsx`
+- Match existing camelCase/PascalCase conventions
 
-### Styling Approach
-Since no existing styles exist, establish one of:
+**Test Organization:**
+- Unit tests for `src/utils/calculator.js` (pure function testing)
+- Component tests using React Testing Library's `render` and `screen` APIs
+- Integration tests simulating user workflows via `userEvent` or `fireEvent`
 
-- **CSS Modules** — Scoped styles co-located with components (`Calculator.module.css`)
-- **Inline Styles** — React style objects for simple styling needs
-- **Plain CSS** — Single global stylesheet (`src/App.css`)
-
-**Recommendation:** CSS Modules for component-scoped styling without external dependencies.
-
-### Project Structure Pattern
-```
-autonomous-repo/
-├── public/
-│   ├── index.html
-│   └── favicon.ico
-├── src/
-│   ├── components/
-│   │   ├── Calculator.jsx
-│   │   ├── Display.jsx
-│   │   ├── ButtonGrid.jsx
-│   │   └── Button.jsx
-│   ├── utils/
-│   │   └── calculator.js       # Optional: calculation logic
-│   ├── App.jsx
-│   ├── App.css
-│   └── main.jsx
-├── .gitignore
-├── package.json
-└── README.md
-```
+**Assertion Style:**
+- Recommended: Vitest (Vite-native) or Jest with explicit matchers
+- Example: `expect(result).toBe(8)` for exact value matching
+- Example: `expect(screen.getByText('8')).toBeInTheDocument()` for UI validation
 
 ## Prior Orbit References
 
-### No Prior Orbits
-This is **Orbit 1** in the trajectory. No previous implementation attempts, architectural decisions, or code artifacts exist to reference.
+### Previous Implementation Context
 
-### Trajectory Context
-The trajectory description indicates this is the **initial establishment** of a calculator application. Future orbits may:
+The artifacts in `.orbital/artifacts/170df6d2-3099-4647-8064-5ba573a71b94/` represent the initial calculator implementation orbit. Key considerations from that work:
 
-- Add advanced features (scientific functions, history)
-- Implement testing infrastructure
-- Add deployment configuration
-- Enhance accessibility or responsiveness
+**From `intent_document.md`:**
+- Original goal: "basic calculator app" supporting add, subtract, multiply, divide
+- Purely frontend project (no backend/API dependencies)
+- React-based implementation requirement
 
-This orbit establishes the **foundational patterns** that future orbits will build upon or refactor.
+**From `proposal_record.md` (likely):**
+- Implementation decisions about state management approach
+- Component breakdown and responsibility allocation
+- Handling of edge cases like division by zero
+- Display formatting decisions (decimal places, error messages)
+
+**From `code_generation.md` (likely):**
+- Actual component implementations and API contracts
+- How operations are passed between components (callback props, event handlers)
+- State shape within Calculator component
+- Error handling patterns
+
+**From `verification_protocol.md` (previous version):**
+- Initial testing strategy that this orbit builds upon
+- Any gaps or lessons learned from initial testing attempts
+- Coverage areas that need expansion
+
+### Integration Points
+
+This orbit MUST NOT contradict implementation decisions from the prior orbit. Specifically:
+
+1. **Calculator Logic Contract:** Tests must call `src/utils/calculator.js` functions using their actual exported API (parameter order, return value format)
+2. **Component Props:** Integration tests must match the actual prop interfaces defined in Button.jsx, Display.jsx
+3. **State Management:** Tests must work with whatever state management pattern Calculator.jsx actually uses
+4. **Error Handling:** If the implementation handles division by zero in a specific way (return "Error", Infinity, NaN), tests must validate that exact behavior
 
 ## Risk Assessment
 
-### Architectural Risks
+### Test Infrastructure Risks
 
-#### Risk: Build Tool Lock-in
-**Description:** Choice of Vite vs. Create React App vs. manual setup creates long-term tooling dependencies that are difficult to change.
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| **Testing library size exceeds 10MB constraint** | Blocks orbit completion per intent constraints | Medium | Use Vitest (Vite-native, smaller footprint than Jest). Verify `node_modules` size with `du -sh node_modules` after install. Consider `@testing-library/react` + `@testing-library/user-event` as minimal set. |
+| **Vite test configuration complexity** | Delays test execution, frustration | Medium | Use `vitest` with zero-config approach — Vite's native test runner shares dev config. Fallback: minimal `vitest.config.js` importing from `vite.config.js`. |
+| **ES module compatibility issues** | Tests fail to import components | Low | Vitest handles ESM natively. Ensure `"type": "module"` respected. Avoid mixing CommonJS require() patterns. |
 
-**Impact:** Medium — Switching build tools later requires significant refactoring of configuration and potentially code structure.
+### Test Coverage Risks
 
-**Mitigation:** 
-- Use Vite for modern defaults and minimal abstraction
-- Keep build configuration minimal and standard
-- Document all non-standard configuration choices in README.md
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| **Missing edge cases in `calculator.js`** | Tests pass but implementation has bugs | High | Explicitly test: division by zero, negative numbers, decimals, large numbers (>1e15), operation chaining, zero as operand. Document any unhandled edge cases as "known limitations." |
+| **UI test brittleness** | Tests break on style changes | Medium | Use semantic queries (`getByRole`, `getByLabelText`) not CSS selectors. Test behavior (button clicks calculate correctly) not implementation (specific class names). |
+| **False positives from shallow testing** | Tests pass but user experience broken | Medium | Include at least 3 full integration tests simulating realistic calculation workflows. Manual checklist must validate visual output matches expectations. |
 
-#### Risk: Premature Abstraction
-**Description:** Over-engineering component structure (too many layers, excessive props drilling) for a simple calculator.
+### Execution Environment Risks
 
-**Impact:** Low — Increases code complexity without providing value for current scope.
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| **Tests exceed 30-second execution budget** | Violates intent constraint | Low | Run tests with `--reporter=verbose --bail` to fail fast. Avoid unnecessary delays (e.g., don't use `waitFor` with long timeouts). Measure actual runtime and optimize if approaching limit. |
+| **Node.js version mismatch** | Tests fail in different environments | Low | Document Node.js >=18.0.0 requirement in test README. Use `engines` field enforcement with `.npmrc` (`engine-strict=true`). |
+| **Missing browser environment for integration tests** | React Testing Library can't render components | Medium | Vitest uses `jsdom` or `happy-dom` for browser APIs. Specify `environment: 'jsdom'` in Vitest config if not auto-detected. |
 
-**Mitigation:**
-- Start with 3-4 components maximum (Calculator, Display, Button, optional ButtonGrid)
-- Extract additional components only when duplication is evident
-- Keep state management simple with local useState hooks
+### Regression Risks
 
-### Implementation Risks
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| **Tests modify production code** | Violates intent constraint (no modifications to calculator logic) | Low | All test files must live outside `src/components/` and `src/utils/` in production paths. Use separate `src/__tests__/` directory or co-located `.test.js` files explicitly excluded from builds. |
+| **Test dependencies leak into production bundle** | Bundle size increase, dev dependencies in prod | Medium | Ensure testing libraries in `devDependencies` only. Verify `vite build` output size unchanged. Add `@vitest` and `@testing-library` to `.gitignore` patterns if accidentally imported. |
 
-#### Risk: Floating-Point Precision Errors
-**Description:** JavaScript floating-point arithmetic produces imprecise results (e.g., `0.1 + 0.2 !== 0.3`).
+### Documentation Risks
 
-**Impact:** High — Violates acceptance criteria for calculation accuracy.
-
-**Mitigation:**
-- Round display values to fixed decimal precision (e.g., 10 significant digits)
-- Use `Number.parseFloat()` and `toFixed()` for display formatting
-- Consider `Math.round()` with multiplier for precise decimal operations
-- Document known precision limits in code comments
-
-#### Risk: Division by Zero Handling
-**Description:** Dividing by zero produces `Infinity` or `NaN` in JavaScript, which breaks the calculator display.
-
-**Impact:** Medium — Creates confusing user experience and violates acceptance boundary for error handling.
-
-**Mitigation:**
-- Explicitly check for zero divisor before division operation
-- Display error message ("Error" or "Cannot divide by zero")
-- Require clear/reset action to recover from error state
-
-#### Risk: Operation Chaining Logic Complexity
-**Description:** Handling consecutive operations (e.g., "5 + 3 + 2" should display 8 after second +) requires stateful operation tracking.
-
-**Impact:** Medium — Common calculator feature that users expect but adds state management complexity.
-
-**Mitigation:**
-- Implement clear state machine: `waitingForOperand` flag to track input state
-- Execute pending operation when new operator is pressed
-- Test edge cases: changing operator mid-input, equals followed by operator
-
-### Development Environment Risks
-
-#### Risk: Node.js Version Incompatibility
-**Description:** Developer's local Node.js version may be incompatible with chosen build tool or React version.
-
-**Impact:** Low — Blocks initial development server launch.
-
-**Mitigation:**
-- Specify `engines` field in `package.json` requiring Node.js >= 18.x
-- Document Node.js version requirement prominently in README.md
-- Recommend use of nvm (Node Version Manager) for version management
-
-#### Risk: Git Configuration Issues
-**Description:** Missing or incorrect `.gitignore` could commit `node_modules/` or build artifacts to repository.
-
-**Impact:** Low — Pollutes repository history with large binary files.
-
-**Mitigation:**
-- Generate `.gitignore` as first file with standard Node.js exclusions
-- Include patterns: `node_modules/`, `dist/`, `build/`, `.DS_Store`, coverage reports
-
-### Security Risks
-
-#### Risk: Dependency Vulnerabilities
-**Description:** React and build tool dependencies may contain known security vulnerabilities.
-
-**Impact:** Low — No user data, authentication, or server communication reduces attack surface.
-
-**Mitigation:**
-- Use latest stable versions of React (18.x) and Vite/CRA
-- Document dependency update process in README.md
-- Note: No automated scanning or updates required per non-goals
-
-#### Risk: XSS Through Calculator Display
-**Description:** If user input is rendered unsafely, could enable cross-site scripting attacks.
-
-**Impact:** Very Low — Calculator only accepts numeric input, no free-form text or HTML.
-
-**Mitigation:**
-- React automatically escapes content by default
-- Validate all input as numeric before state updates
-- No use of `dangerouslySetInnerHTML` required
-
-### User Experience Risks
-
-#### Risk: Keyboard Event Conflicts
-**Description:** Keyboard shortcuts may conflict with browser shortcuts or accessibility tools.
-
-**Impact:** Low — May interfere with screen readers or browser navigation.
-
-**Mitigation:**
-- Use standard key mappings (numbers, operators, Enter, Escape)
-- Avoid overriding critical browser shortcuts (Ctrl+T, Ctrl+W)
-- Implement keyboard handlers on focused calculator container, not globally
-
-#### Risk: Display Overflow
-**Description:** Long calculation results may exceed display width, causing layout breakage or unreadable text.
-
-**Impact:** Medium — Violates acceptance boundary for display capacity (12 character minimum).
-
-**Mitigation:**
-- Set `max-width` and `overflow: hidden` or `overflow: auto` on display element
-- Use `text-overflow: ellipsis` for graceful truncation
-- Implement scientific notation for very large/small numbers (>1e12 or <1e-12)
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| **Test results lack traceability** | Cannot map tests back to acceptance criteria | Medium | Generate JSON test results with custom reporter. Include table mapping test suite names to intent acceptance boundaries (e.g., "addition-edge-cases" → "Minimum Acceptable: test zero as operand"). |
+| **Manual checklist too vague** | Different QA reviewers get inconsistent results | High | Provide exact input sequences ("Click 5, +, 3, =, expect display shows '8'"). Include screenshots or reference GIFs showing expected UI behavior. |
