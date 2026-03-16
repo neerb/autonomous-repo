@@ -1,0 +1,45 @@
+.calculator-button {
+  font-size: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid #ddd;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.calculator-button:hover {
+  background-color: #e0e0e0;
+}
+
+.calculator-button:active {
+  background-color: #d0d0d0;
+}
+
+.calculator-button--operator {
+  background-color: #ff9500;
+  color: white;
+  font-weight: bold;
+}
+
+.calculator-button--operator:hover {
+  background-color: #e68a00;
+}
+
+.calculator-button--action {
+  background-color: #d4d4d2;
+  font-size: 1.2rem;
+}
+
+.calculator-button--action:hover {
+  background-color: #c0c0be;
+}
+
+.calculator-button--equals {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+}
+
+.calculator-button--equals:hover {
+  background-color: #45a049;
+}
