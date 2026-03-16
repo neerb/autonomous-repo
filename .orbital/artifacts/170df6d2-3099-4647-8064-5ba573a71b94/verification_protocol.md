@@ -1,1120 +1,658 @@
-# Verification Protocol: React Calculator Web App
+# Verification Protocol: React Calculator Web App - Enhanced Testing & Validation
 
 ## Automated Gates
 
-### Gate 1: Development Server Launch
-**Objective:** Verify project initializes and development server starts without errors
+### Gate 1: Test Infrastructure Validation
 
-**Prerequisites:**
-- Node.js 18.x or higher installed
-- Repository cloned locally
-- No existing processes on port 5173
+**Objective:** Verify testing framework installed correctly and meets constraint boundaries.
 
-**Test Procedure:**
+**Execution Command:**
 ```bash
-cd autonomous-repo
-npm install
-npm run dev
+npm install && du -sh node_modules/{vitest,jsdom,@testing-library} | awk '{sum+=$1}END{print sum"MB"}'
 ```
 
 **Pass Criteria:**
-- Exit code 0 from `npm install`
-- Development server starts successfully
-- Console output shows: `Local: http://localhost:5173/`
-- No error messages in terminal output
-- Browser can navigate to `http://localhost:5173` without 404 or server errors
+- Total testing library footprint ≤10MB (Intent Constraint: "Testing framework additions must not exceed 10MB")
+- Exit code 0 from npm install (no dependency conflicts)
+- Files exist: `vitest.config.js`, `src/test/setup.js`
 
-**Expected Output:**
-```
-VITE v5.x.x ready in XXX ms
-
-➜  Local:   http://localhost:5173/
-➜  Network: use --host to expose
-```
-
-**Failure Actions:** If server fails to start, check Node.js version (`node --version`) and ensure no port conflicts (`lsof -i :5173`)
+**Failure Action:** Re-orbit to Phase 1 with dependency optimization (remove optional packages like `@testing-library/jest-dom`)
 
 ---
 
-### Gate 2: File Structure Validation
-**Objective:** Verify all required files exist with correct naming
+### Gate 2: Unit Test Execution - Calculator Logic
 
-**Test Procedure:**
+**Objective:** Validate all four arithmetic operations with comprehensive edge case coverage.
+
+**Execution Command:**
 ```bash
-# Run from repository root
-ls -la package.json
-ls -la index.html
-ls -la vite.config.js
-ls -la .gitignore
-ls -la src/main.jsx
-ls -la src/App.jsx
-ls -la src/App.css
-ls -la src/index.css
-ls -la src/components/Calculator.jsx
-ls -la src/components/Calculator.css
-ls -la src/components/Display.jsx
-ls -la src/components/Display.css
-ls -la src/components/Button.jsx
-ls -la src/components/Button.css
-ls -la src/utils/calculator.js
+npm test -- src/test/utils/calculator.test.js --reporter=json --outputFile=.orbital/artifacts/unit-test-results.json
 ```
 
 **Pass Criteria:**
-- All 16 files exist
-- No "No such file or directory" errors
-- Files are not empty (size > 0 bytes)
+- **Minimum Acceptable (Intent):** ≥20 total test cases execute without errors
+- **Target Success (Intent):** ≥30 test cases pass, covering:
+  - Addition: positive numbers, negative numbers, decimals, zero operand (≥8 tests)
+  - Subtraction: same coverage pattern (≥8 tests)
+  - Multiplication: including multiply by zero, multiply by one (≥8 tests)
+  - Division: including division by zero handling (≥8 tests)
+- Execution time <10 seconds (contributes to 30-second total budget)
+- Zero test timeouts or infrastructure failures
 
-**Automated Check Script:**
-```javascript
-const fs = require('fs');
-const requiredFiles = [
-  'package.json', 'index.html', 'vite.config.js', '.gitignore',
-  'src/main.jsx', 'src/App.jsx', 'src/App.css', 'src/index.css',
-  'src/components/Calculator.jsx', 'src/components/Calculator.css',
-  'src/components/Display.jsx', 'src/components/Display.css',
-  'src/components/Button.jsx', 'src/components/Button.css',
-  'src/utils/calculator.js'
-];
+**Expected Test Cases (Minimum 32):**
 
-let allExist = true;
-requiredFiles.forEach(file => {
-  if (!fs.existsSync(file)) {
-    console.error(`FAIL: Missing ${file}`);
-    allExist = false;
-  } else if (fs.statSync(file).size === 0) {
-    console.error(`FAIL: Empty file ${file}`);
-    allExist = false;
-  }
-});
+| Test Suite | Test Case | Input | Expected Output | Intent Traceability |
+|------------|-----------|-------|-----------------|---------------------|
+| Addition | adds two positive integers | 5 + 3 | 8 | Intent Quality Standard: "two positive numbers" |
+| Addition | adds two positive decimals | 1.5 + 2.7 | 4.2 | Intent Quality Standard: "decimal inputs" |
+| Addition | adds two negative numbers | -5 + -3 | -8 | Intent Quality Standard: "two negative numbers" |
+| Addition | adds positive and negative | 5 + -3 | 2 | Intent Quality Standard: "two negative numbers" |
+| Addition | adds zero to positive | 0 + 5 | 5 | Intent Quality Standard: "zero as operand" |
+| Addition | adds zero to negative | 0 + -5 | -5 | Intent Quality Standard: "zero as operand" |
+| Addition | handles large numbers | 1e15 + 1e15 | 2e15 | Intent Target: "large numbers" |
+| Addition | handles floating point | 0.1 + 0.2 | ~0.3 (toBeCloseTo) | Intent Target: "floating-point precision" |
+| Subtraction | subtracts positive integers | 10 - 3 | 7 | Intent Quality Standard: "two positive numbers" |
+| Subtraction | subtracts with decimals | 5.5 - 2.2 | 3.3 | Intent Quality Standard: "decimal inputs" |
+| Subtraction | subtracts negative numbers | -5 - -3 | -2 | Intent Quality Standard: "two negative numbers" |
+| Subtraction | subtracts to negative result | 3 - 5 | -2 | Intent Quality Standard: edge case |
+| Subtraction | subtracts from zero | 0 - 5 | -5 | Intent Quality Standard: "zero as operand" |
+| Subtraction | subtracts zero | 5 - 0 | 5 | Intent Quality Standard: "zero as operand" |
+| Subtraction | handles large numbers | 1e15 - 1e14 | 9e14 | Intent Target: "large numbers" |
+| Subtraction | handles precision | 1.1 - 0.1 | ~1.0 (toBeCloseTo) | Intent Target: "floating-point precision" |
+| Multiplication | multiplies positive integers | 5 × 3 | 15 | Intent Quality Standard: "two positive numbers" |
+| Multiplication | multiplies decimals | 2.5 × 4.0 | 10.0 | Intent Quality Standard: "decimal inputs" |
+| Multiplication | multiplies negative numbers | -5 × -3 | 15 | Intent Quality Standard: "two negative numbers" |
+| Multiplication | multiplies positive and negative | 5 × -3 | -15 | Intent Quality Standard: sign handling |
+| Multiplication | multiplies by zero | 5 × 0 | 0 | Intent Quality Standard: "zero as operand" |
+| Multiplication | multiplies by one | 5 × 1 | 5 | Intent Quality Standard: identity operation |
+| Multiplication | handles large numbers | 1e7 × 1e7 | 1e14 | Intent Target: "large numbers" |
+| Multiplication | handles precision | 0.1 × 0.2 | ~0.02 (toBeCloseTo) | Intent Target: "floating-point precision" |
+| Division | divides positive integers | 10 ÷ 2 | 5 | Intent Quality Standard: "two positive numbers" |
+| Division | divides with decimals | 5.5 ÷ 2.0 | 2.75 | Intent Quality Standard: "decimal inputs" |
+| Division | divides negative numbers | -10 ÷ -2 | 5 | Intent Quality Standard: "two negative numbers" |
+| Division | divides positive by negative | 10 ÷ -2 | -5 | Intent Quality Standard: sign handling |
+| Division | divides by zero | 5 ÷ 0 | Infinity or "Error" | Intent Target: "division by zero handling" |
+| Division | divides zero | 0 ÷ 5 | 0 | Intent Quality Standard: "zero as operand" |
+| Division | divides by one | 5 ÷ 1 | 5 | Intent Quality Standard: identity operation |
+| Division | handles precision | 1.0 ÷ 3.0 | ~0.333... (toBeCloseTo) | Intent Target: "floating-point precision" |
 
-process.exit(allExist ? 0 : 1);
-```
-
----
-
-### Gate 3: Basic Arithmetic Operations
-**Objective:** Verify all four operations produce mathematically correct results
-
-**Test Cases:**
-
-#### Test 3.1: Addition
-- **Input:** Click "5" → "+" → "3" → "="
-- **Expected Display:** "8"
-- **Acceptance Boundary:** Minimal Threshold - "All four basic operations produce mathematically correct results for integer inputs"
-
-#### Test 3.2: Subtraction
-- **Input:** Click "10" → "-" → "4" → "="
-- **Expected Display:** "6"
-- **Acceptance Boundary:** Minimal Threshold - Integer operations work correctly
-
-#### Test 3.3: Multiplication
-- **Input:** Click "7" → "*" → "6" → "="
-- **Expected Display:** "42"
-- **Acceptance Boundary:** Minimal Threshold - Integer operations work correctly
-
-#### Test 3.4: Division
-- **Input:** Click "20" → "/" → "4" → "="
-- **Expected Display:** "5"
-- **Acceptance Boundary:** Minimal Threshold - Integer operations work correctly
-
-**Automated Test Implementation:**
-```javascript
-// Unit test for calculator.js utility functions
-import { calculate } from './src/utils/calculator.js';
-
-describe('Basic Arithmetic Operations', () => {
-  test('Addition: 5 + 3 = 8', () => {
-    expect(calculate(5, '+', 3)).toBe(8);
-  });
-  
-  test('Subtraction: 10 - 4 = 6', () => {
-    expect(calculate(10, '-', 4)).toBe(6);
-  });
-  
-  test('Multiplication: 7 * 6 = 42', () => {
-    expect(calculate(7, '*', 6)).toBe(42);
-  });
-  
-  test('Division: 20 / 4 = 5', () => {
-    expect(calculate(20, '/', 4)).toBe(5);
-  });
-});
-```
-
-**Pass Criteria:** All 4 tests return expected values exactly
+**Failure Action:** If <20 tests execute: BLOCK orbit, re-orbit Phase 2. If 20-29 tests pass: CONDITIONAL PASS with human review required (Intent: "Minimum Acceptable").
 
 ---
 
-### Gate 4: Decimal Precision Handling
-**Objective:** Verify decimal operations meet minimum 6 significant digit precision
+### Gate 3: Component Test Execution
 
-**Test Cases:**
+**Objective:** Verify React components render correctly and respond to props.
 
-#### Test 4.1: Simple Decimal Addition
-- **Input:** "5.5" + "2.5"
-- **Expected Result:** 8 (within 0.000001 tolerance)
-- **Acceptance Boundary:** Target Range - "Calculator handles decimal numbers with at least 2 decimal places of precision"
-
-#### Test 4.2: Floating-Point Precision Edge Case
-- **Input:** "0.1" + "0.2"
-- **Expected Result:** 0.3 (rounded to 10 significant digits: 0.3, not 0.30000000000000004)
-- **Acceptance Boundary:** Quantitative Boundary - "Minimum 6 significant digits, target 10 significant digits"
-
-#### Test 4.3: Division with Repeating Decimal
-- **Input:** "10" / "3"
-- **Expected Result:** 3.333333333 (10 significant digits)
-- **Acceptance Boundary:** Quantitative Boundary - 10 significant digit precision
-
-**Automated Test Implementation:**
-```javascript
-import { calculate, formatDisplay } from './src/utils/calculator.js';
-
-describe('Decimal Precision', () => {
-  test('Simple decimal addition: 5.5 + 2.5 = 8', () => {
-    const result = calculate(5.5, '+', 2.5);
-    expect(result).toBeCloseTo(8, 6);
-  });
-  
-  test('Floating-point edge case: 0.1 + 0.2 ≈ 0.3', () => {
-    const result = calculate(0.1, '+', 0.2);
-    expect(result).toBeCloseTo(0.3, 10);
-  });
-  
-  test('Division with repeating decimal: 10 / 3', () => {
-    const result = calculate(10, '/', 3);
-    expect(result).toBeCloseTo(3.333333333, 9);
-  });
-  
-  test('Format display handles precision correctly', () => {
-    const formatted = formatDisplay(calculate(0.1, '+', 0.2));
-    expect(formatted).toBe('0.3');
-  });
-});
-```
-
-**Pass Criteria:** All tests pass within specified tolerance (0.000001 for 6 digits, 0.0000000001 for 10 digits)
-
----
-
-### Gate 5: Division by Zero Error Handling
-**Objective:** Verify division by zero displays error state and blocks further operations
-
-**Test Cases:**
-
-#### Test 5.1: Direct Division by Zero
-- **Input:** "5" → "/" → "0" → "="
-- **Expected Display:** "Error"
-- **Acceptance Boundary:** Target Range - "division by zero displays error state"
-
-#### Test 5.2: Error State Persistence
-- **Input:** After error state, press "+" (should not change display)
-- **Expected Display:** Still "Error"
-- **Acceptance Boundary:** Risk mitigation - "Calculator requires clear action to recover, preventing cascading errors"
-
-#### Test 5.3: Clear Recovery
-- **Input:** After error state, press "C"
-- **Expected Display:** "0"
-- **Expected State:** Calculator operational again
-
-**Automated Test Implementation:**
-```javascript
-import { calculate } from './src/utils/calculator.js';
-
-describe('Division by Zero', () => {
-  test('Division by zero returns Error', () => {
-    expect(calculate(5, '/', 0)).toBe('Error');
-  });
-  
-  test('Division by zero with decimal operand', () => {
-    expect(calculate(10.5, '/', 0)).toBe('Error');
-  });
-  
-  test('Zero divided by number is valid', () => {
-    expect(calculate(0, '/', 5)).toBe(0);
-  });
-});
-```
-
-**Pass Criteria:** 
-- `calculate(x, '/', 0)` returns string "Error" for any x
-- `calculate(0, '/', y)` returns 0 for any non-zero y
-
----
-
-### Gate 6: Keyboard Input Functional Parity
-**Objective:** Verify keyboard inputs produce identical results to mouse clicks
-
-**Test Cases:**
-
-#### Test 6.1: Numeric Key Input
-- **Keyboard Input:** Press "7", "8", "9" keys
-- **Expected Display:** "789"
-- **Acceptance Boundary:** Target Range - "Keyboard number entry works in addition to button clicks"
-
-#### Test 6.2: Operator Key Mapping
-- **Keyboard Input:** "5" → "+" → "3" → "Enter"
-- **Expected Display:** "8"
-- **Mouse Equivalent:** Click 5 → + → 3 → =
-
-#### Test 6.3: Clear Shortcuts
-- **Keyboard Input:** "Escape" key
-- **Expected Behavior:** Display resets to "0", state clears
-- **Acceptance Boundary:** Exceptional Ceiling - "Keyboard shortcuts for all operations (+ - * / Enter for equals, Escape for clear)"
-
-#### Test 6.4: All Operator Keys
-- **Test +:** Keyboard "+" produces same result as clicking + button
-- **Test -:** Keyboard "-" produces same result as clicking - button
-- **Test *:** Keyboard "*" produces same result as clicking * button
-- **Test /:** Keyboard "/" produces same result as clicking / button
-
-**Manual Verification Required:** Automated UI testing would require additional testing framework (Playwright, Cypress) not in scope. This gate requires human verification in Human Verification Points section.
-
-**Pass Criteria:** 
-- All numeric keys (0-9) input correctly
-- All operator keys (+, -, *, /) trigger operations
-- Enter/= triggers equals
-- Escape/C triggers clear
-- Decimal key (.) inputs decimal point
-
----
-
-### Gate 7: Display Capacity and Overflow Handling
-**Objective:** Verify display handles long numbers without layout breakage
-
-**Test Cases:**
-
-#### Test 7.1: 12-Character Display Capacity
-- **Input:** "123456789012" (12 digits)
-- **Expected Display:** All digits visible or appropriately formatted
-- **Acceptance Boundary:** Quantitative Boundary - "Shows at least 12 characters in the numeric display"
-
-#### Test 7.2: Scientific Notation for Large Numbers
-- **Input:** "999999999999" * "999999999999"
-- **Expected Display:** Scientific notation (e.g., "9.99999e+23")
-- **Acceptance Boundary:** Risk mitigation - "formatDisplay() switches to scientific notation for numbers >= 1e12"
-
-#### Test 7.3: Scientific Notation for Small Numbers
-- **Input:** "0.000001" / "1000000"
-- **Expected Display:** Scientific notation (e.g., "1e-12")
-
-**Automated Test Implementation:**
-```javascript
-import { formatDisplay } from './src/utils/calculator.js';
-
-describe('Display Formatting', () => {
-  test('12-character number displays correctly', () => {
-    const result = formatDisplay('123456789012');
-    expect(result.length).toBeLessThanOrEqual(12);
-  });
-  
-  test('Very large numbers use scientific notation', () => {
-    const result = formatDisplay(1e13);
-    expect(result).toMatch(/e+/);
-  });
-  
-  test('Very small numbers use scientific notation', () => {
-    const result = formatDisplay(1e-7);
-    expect(result).toMatch(/e-/);
-  });
-  
-  test('Normal range numbers display standard form', () => {
-    const result = formatDisplay(123456.789);
-    expect(result).not.toMatch(/e/);
-  });
-});
-```
-
-**Pass Criteria:** 
-- Numbers within displayable range show standard notation
-- Numbers >= 1e12 show exponential notation
-- Numbers < 1e-6 (except 0) show exponential notation
-- No layout breakage in browser display
-
----
-
-### Gate 8: Operation Chaining Logic
-**Objective:** Verify consecutive operations execute correctly without pressing equals
-
-**Test Cases:**
-
-#### Test 8.1: Basic Chaining
-- **Input:** "5" → "+" → "3" → "+" → "2" → "="
-- **Expected Sequence:** 
-  - After second "+": Display shows "8"
-  - After "=": Display shows "10"
-- **Acceptance Boundary:** Target Range - "consecutive operations chain correctly"
-
-#### Test 8.2: Mixed Operation Chaining
-- **Input:** "10" → "-" → "3" → "*" → "2" → "="
-- **Expected Sequence:**
-  - After "*": Display shows "7"
-  - After "=": Display shows "14"
-- **Acceptance Boundary:** Exceptional Ceiling - "Operation chaining follows standard calculator conventions (displays intermediate results)"
-
-#### Test 8.3: Operator Replacement
-- **Input:** "5" → "+" → "-" (change operator before entering second number) → "3" → "="
-- **Expected Display:** "2"
-- **Expected Behavior:** Pressing second operator replaces first operator without executing
-
-**Automated Test Implementation:**
-```javascript
-// Integration test simulating state transitions
-describe('Operation Chaining', () => {
-  test('Basic chaining: 5 + 3 + 2 = 10', () => {
-    let state = { display: '0', operand: null, operator: null };
-    
-    // Simulate: 5
-    state = { ...state, display: '5' };
-    // Simulate: +
-    state = { ...state, operand: 5, operator: '+', waitingForOperand: true };
-    // Simulate: 3
-    state = { ...state, display: '3', waitingForOperand: false };
-    // Simulate: + (should calculate 5+3=8)
-    const intermediate = calculate(state.operand, state.operator, parseFloat(state.display));
-    expect(intermediate).toBe(8);
-    state = { ...state, display: '8', operand: 8, operator: '+', waitingForOperand: true };
-    // Simulate: 2
-    state = { ...state, display: '2', waitingForOperand: false };
-    // Simulate: =
-    const final = calculate(state.operand, state.operator, parseFloat(state.display));
-    expect(final).toBe(10);
-  });
-});
-```
-
-**Pass Criteria:** 
-- Intermediate results display correctly after each operator press
-- Final result matches expected calculation
-- Operator replacement works without unintended calculation
-
----
-
-### Gate 9: Git Repository Hygiene
-**Objective:** Verify no build artifacts or dependencies committed to version control
-
-**Test Procedure:**
+**Execution Command:**
 ```bash
-# Check for unwanted files in git tracking
-git status --porcelain
-
-# Verify .gitignore includes critical patterns
-grep -E "node_modules|dist|.env" .gitignore
+npm test -- src/test/components/*.test.jsx --reporter=json --outputFile=.orbital/artifacts/component-test-results.json
 ```
 
 **Pass Criteria:**
-- `node_modules/` directory NOT tracked by git
-- `dist/` or `build/` directories NOT tracked
-- `.gitignore` file exists and contains at minimum:
-  - `node_modules/`
-  - `dist/`
-  - `.DS_Store`
-  - `*.log`
+- **Minimum Acceptable:** ≥6 component tests execute (Button: 3, Display: 3)
+- All tests use semantic queries (`getByRole`, `getByLabelText`, not CSS selectors)
+- Tests validate behavior (callbacks fire, props render) not implementation (class names)
+- Execution time <5 seconds
 
-**Automated Check Script:**
-```bash
-#!/bin/bash
-# verify-git-hygiene.sh
+**Expected Test Cases (Minimum 6):**
 
-if git ls-files | grep -q "node_modules"; then
-  echo "FAIL: node_modules tracked by git"
-  exit 1
-fi
+| Component | Test Case | Validation | Intent Traceability |
+|-----------|-----------|------------|---------------------|
+| Button | renders with provided label | screen.getByText(label) exists | Intent: Component integration validation |
+| Button | calls onClick when clicked | Mock function called once | Intent: UI interaction validation |
+| Button | applies correct CSS class | Component renders without errors | Intent: Visual validation criteria |
+| Display | renders provided value | screen.getByText(value) exists | Intent Target: "display formatting" |
+| Display | displays zero by default | screen.getByText('0') exists | Intent: Initial state validation |
+| Display | handles long numbers | No overflow, ellipsis or scroll | Intent Target: "large numbers" edge case |
 
-if git ls-files | grep -q "dist/"; then
-  echo "FAIL: dist/ tracked by git"
-  exit 1
-fi
-
-if ! grep -q "node_modules" .gitignore; then
-  echo "FAIL: node_modules not in .gitignore"
-  exit 1
-fi
-
-echo "PASS: Git repository hygiene verified"
-exit 0
-```
+**Failure Action:** If tests fail due to missing APIs, add polyfills to `src/test/setup.js` and re-run. If tests fail due to wrong prop interfaces, BLOCK and escalate to human review (production code inspection needed).
 
 ---
 
-### Gate 10: Package Dependencies Validation
-**Objective:** Verify correct dependencies installed with appropriate versions
+### Gate 4: Integration Test Execution - User Workflows
 
-**Test Procedure:**
+**Objective:** Validate end-to-end user interactions from button click through calculation to display update.
+
+**Execution Command:**
 ```bash
-cat package.json | grep -A 5 "dependencies"
-cat package.json | grep "engines"
+npm test -- src/test/integration/calculator-workflows.test.jsx --reporter=json --outputFile=.orbital/artifacts/integration-test-results.json
 ```
 
 **Pass Criteria:**
-- `package.json` contains:
-  - `"react": "^18.x.x"` or later
-  - `"react-dom": "^18.x.x"` or later
-- `package.json` contains `engines` field specifying Node.js >= 18.0.0
-- `package-lock.json` or `yarn.lock` exists
+- **Target Success (Intent):** ≥5 integration tests pass covering:
+  - Basic arithmetic operation (one test per operation type)
+  - Operation chaining (Intent Quality Standard: "operation chaining")
+  - Error handling (division by zero graceful degradation)
+- Tests simulate realistic user interactions via `@testing-library/user-event`
+- Execution time <15 seconds (budget management)
 
-**Automated Test Implementation:**
-```javascript
-const fs = require('fs');
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+**Expected Test Cases (Minimum 5):**
 
-// Check React version
-const reactVersion = packageJson.dependencies?.react || packageJson.devDependencies?.react;
-if (!reactVersion || !reactVersion.match(/^18./)) {
-  console.error('FAIL: React version not ^18.x');
-  process.exit(1);
-}
+| Test Case | User Actions | Expected Display | Intent Traceability |
+|-----------|--------------|------------------|---------------------|
+| Basic addition: 5 + 3 = 8 | Click [5] [+] [3] [=] | Display shows "8" | Intent Desired Outcome: "addition...function correctly" |
+| Operation chaining: 10 - 3 = 7, then × 2 = 14 | Click [1][0][-][3][=], then [×][2][=] | First "7", then "14" | Intent Quality Standard: "operation chaining" |
+| Division by zero: 5 ÷ 0 | Click [5][÷][0][=] | "Error" or "Infinity" (per implementation) | Intent Target: "division by zero handling" |
+| Decimal calculation: 0.1 + 0.2 | Click [0][.][1][+][0][.][2][=] | Display ~"0.3" | Intent Target: "floating-point precision" |
+| Negative result: 3 - 5 = -2 | Click [3][-][5][=] | Display shows "-2" | Intent Target: "error states" (negative display) |
 
-// Check Node.js engine requirement
-const nodeEngine = packageJson.engines?.node;
-if (!nodeEngine || !nodeEngine.match(/>=18/)) {
-  console.error('FAIL: Node.js engine requirement not set to >=18');
-  process.exit(1);
-}
+**Failure Action:** If tests timeout: reduce `waitFor` timeouts, use `userEvent.setup()` optimization. If assertions fail: BLOCK and require human review of Calculator.jsx state management implementation.
 
-console.log('PASS: Dependencies validated');
-process.exit(0);
+---
+
+### Gate 5: Test Execution Performance Budget
+
+**Objective:** Ensure all automated tests execute within 30-second constraint.
+
+**Execution Command:**
+```bash
+time npm test -- --reporter=json --outputFile=.orbital/artifacts/full-test-results.json
 ```
+
+**Pass Criteria:**
+- Total execution time ≤30 seconds (Intent Constraint: "execute in under 30 seconds total")
+- Breakdown budget:
+  - Unit tests: ≤10 seconds
+  - Component tests: ≤5 seconds
+  - Integration tests: ≤15 seconds
+- No individual test exceeds 5-second timeout
+
+**Failure Action:** If budget exceeded: optimize tests (remove unnecessary `waitFor` calls, use synchronous APIs where possible). If cannot optimize: reduce test count to meet budget while maintaining Intent "Minimum Acceptable" threshold (20+ tests).
+
+---
+
+### Gate 6: Test Output Format Validation
+
+**Objective:** Verify machine-readable output for CI/CD integration.
+
+**Execution Command:**
+```bash
+cat .orbital/artifacts/full-test-results.json | jq '.testResults | length'
+```
+
+**Pass Criteria:**
+- JSON file exists at `.orbital/artifacts/full-test-results.json` (Intent: "machine-readable output")
+- JSON parseable (valid syntax)
+- Contains fields: `numTotalTests`, `numPassedTests`, `numFailedTests`, `testResults[]`
+- `numTotalTests` ≥20 (Intent: "Minimum Acceptable")
+
+**Failure Action:** If JSON malformed: check Vitest reporter configuration in `vitest.config.js`. If file missing: verify `outputFile` path in config.
+
+---
+
+### Gate 7: Production Code Integrity
+
+**Objective:** Verify no production code modified during verification implementation (Intent Constraint).
+
+**Execution Command:**
+```bash
+git diff HEAD --name-only | grep -E '^src/(components|utils)/' && echo "FAIL: Production code modified" || echo "PASS"
+```
+
+**Pass Criteria:**
+- **CRITICAL CONSTRAINT (Intent):** Zero modifications to files in:
+  - `src/components/*.jsx`
+  - `src/utils/*.js`
+  - `src/App.jsx`
+  - `src/main.jsx`
+- Only permitted changes:
+  - New files in `src/test/`
+  - `package.json` (devDependencies only)
+  - `vitest.config.js` (new file)
+  - `.orbital/artifacts/*`
+  - `README.md` (documentation updates)
+
+**Failure Action:** If production code modified: IMMEDIATE BLOCK, rollback commit, re-orbit with strict code review gate.
+
+---
+
+### Gate 8: Dependency Bundle Size Validation
+
+**Objective:** Verify test dependencies do not leak into production bundle.
+
+**Execution Command:**
+```bash
+npm run build && du -sh dist/ && ls dist/ | grep -E 'vitest|@testing-library' && echo "FAIL: Test deps in bundle" || echo "PASS"
+```
+
+**Pass Criteria:**
+- `dist/` folder size unchanged from baseline (production bundle unaffected)
+- No test library names appear in `dist/` file listing
+- `package.json` shows testing libraries in `devDependencies` only
+
+**Failure Action:** If test deps in bundle: add test directories to Vite's `build.rollupOptions.external`. If bundle size increased: investigate and remove any production imports of test libraries.
+
+---
 
 ## Human Verification Points
 
-### Verification Point 1: Visual Interface Assessment
-**Objective:** Confirm UI meets design requirements for calculator appearance
+### HVP-1: Calculator Logic API Inspection
 
-**Reviewer Actions:**
-1. Launch application (`npm run dev`)
-2. Navigate to `http://localhost:5173`
-3. Visually inspect calculator interface
+**Prerequisite:** Before automated tests run.
 
-**Assessment Criteria:**
-- **Display area clearly visible:** Dark background (#222), white text, right-aligned, minimum 4rem height
-- **Button grid layout:** 4 columns, clear visual separation between buttons
-- **Button type distinction:** 
-  - Number buttons (0-9, .): Light gray background (#f5f5f5)
-  - Operator buttons (+, -, *, /): Orange background (#ff9500), white text
-  - Clear button (C): Gray background (#d4d4d2)
-  - Equals button (=): Green background (#4CAF50), white text
-- **Overall aesthetic:** Calculator centered on gradient purple background, professional appearance
+**Reviewer Action:**
+1. Open `src/utils/calculator.js` in code editor
+2. Identify exported functions and their signatures
+3. Document actual API contract:
+   - Function names (e.g., `add()`, `subtract()`, or `calculate(op, a, b)`?)
+   - Parameter order and types
+   - Return value format (number, string, or object?)
+   - Error handling approach for division by zero
 
-**Acceptance Boundary:** Target Range - "Visual feedback distinguishes between number buttons, operation buttons, and action buttons"
+**Verification Checklist:**
+- [ ] Exported function names match test imports in `src/test/utils/calculator.test.js`
+- [ ] Test function calls use correct parameter order
+- [ ] Division by zero test assertions match actual implementation behavior
+- [ ] Test mocks (if any) align with actual function signatures
+
+**Intent Traceability:** Intent Dependency: "Existing calculator implementation in src/utils/calculator.js (must remain stable during verification)"
+
+**Pass Criteria:** All test imports successfully call actual functions without TypeErrors or "function not found" errors.
+
+**Failure Action:** If API mismatch discovered: update test imports and function calls in Phase 2 tests. Document actual API in `src/test/README.md`.
+
+---
+
+### HVP-2: Component Prop Interface Review
+
+**Timing:** After component tests written, before integration tests.
+
+**Reviewer Action:**
+1. Open `src/components/Button.jsx` and `src/components/Display.jsx`
+2. Identify prop interfaces (PropTypes, TypeScript interfaces, or JSDoc)
+3. Review component test files (`src/test/components/*.test.jsx`) and verify:
+   - Test components receive props using correct names
+   - Prop types match (string vs. number, callback signatures)
+   - Required props are always provided in tests
+
+**Verification Checklist:**
+- [ ] Button tests pass `onClick` callback with correct signature
+- [ ] Button tests pass `label` or `children` prop correctly
+- [ ] Display tests pass `value` prop with correct type (string vs. number)
+- [ ] No PropType warnings in test console output
+- [ ] Component tests use semantic queries, not brittle selectors
+
+**Intent Traceability:** Context Package: "Component Props: Integration tests must match the actual prop interfaces"
+
+**Pass Criteria:** All component tests render without PropType warnings or missing prop errors.
+
+**Failure Action:** If prop mismatches found: update test props to match actual component interfaces. If components lack PropTypes: add inline documentation to tests explaining expected props.
+
+---
+
+### HVP-3: Manual Verification Checklist Execution
+
+**Timing:** After all automated gates pass.
+
+**Reviewer Action:**
+1. Start development server: `npm run dev`
+2. Open `.orbital/artifacts/manual-verification-checklist.md`
+3. Execute each scenario step-by-step
+4. Fill in "Actual Result" column with PASS/FAIL and notes
+5. Screenshot any failures for documentation
+
+**Verification Checklist (Minimum 8 Scenarios):**
+
+| Scenario | Steps | Expected Result | Acceptance Boundary |
+|----------|-------|-----------------|---------------------|
+| 1. Basic Addition | Click [5][+][3][=] | Display shows "8", no errors | Intent Minimum: Manual checklist with 8+ scenarios |
+| 2. Operation Chaining | [10][-][3][=], then [×][2][=] | First "7", then "14" | Intent Quality Standard: "operation chaining" |
+| 3. Division by Zero | [5][÷][0][=] | Error message or Infinity displayed gracefully | Intent Target: "division by zero handling" |
+| 4. Decimal Input | [0][.][1][+][0][.][2][=] | Display ~"0.3" (accept 0.30000000004) | Intent Target: "floating-point precision" |
+| 5. Negative Result Display | [3][-][5][=] | Display shows "-2" with proper formatting | Intent Target: "display formatting" |
+| 6. Large Number Handling | [9][9][9][9][9][9][9][9][9][9] | Display shows all digits or scientific notation | Intent Target: "large numbers" |
+| 7. Clear/Reset Function | Enter "5+3", click Clear, enter "2×4" | Previous calculation cleared, new calc works | Intent: Basic functionality validation |
+| 8. Rapid Button Clicking | Click [5] rapidly 10 times | Display updates smoothly, no crashes | Intent: Stress test, UX coherence |
+
+**Intent Traceability:** Intent Acceptance Boundary: "Manual verification checklist documenting 8+ interactive scenarios with expected results"
+
+**Pass Criteria:**
+- **Minimum Acceptable (Intent):** ≥6 of 8 scenarios PASS
+- **Target Success (Intent):** All 8 scenarios PASS with visual validation notes
+- No browser console errors during any scenario
+- Display formatting consistent (font, alignment, color)
+
+**Failure Action:** 
+- If ≥2 scenarios fail: BLOCK orbit, investigate root cause (likely Calculator.jsx state management issue)
+- If 1 scenario fails: CONDITIONAL PASS with documented known limitation
+- If failures are visual only (formatting): PASS with UI improvement recommendations for future orbit
+
+---
+
+### HVP-4: Test Strategy Architectural Review
+
+**Timing:** After full implementation, before orbit closure.
+
+**Reviewer Action:**
+1. Review test file organization in `src/test/`
+2. Assess test quality against Context Package patterns:
+   - Tests use semantic queries (not CSS selectors)
+   - Integration tests simulate realistic user workflows
+   - Unit tests avoid testing implementation details
+3. Evaluate test maintainability:
+   - Clear test descriptions
+   - No hardcoded magic numbers without comments
+   - Test setup/teardown properly managed
+
+**Verification Checklist:**
+- [ ] Test organization follows proposed structure (`utils/`, `components/`, `integration/`)
+- [ ] File naming conventions match codebase (camelCase for utils, PascalCase for components)
+- [ ] Tests do not import production code into test files (no circular dependencies)
+- [ ] No test-specific code added to production files (no `if (process.env.NODE_ENV === 'test')`)
+- [ ] Test documentation adequate for future developers (`src/test/README.md` complete)
+
+**Intent Traceability:** Intent Trust Tier: "Learning Opportunity: First orbit in a new repository establishes quality patterns"
+
+**Pass Criteria:** Senior engineer confirms tests establish good patterns for future verification work.
+
+**Failure Action:** If patterns suboptimal: document improvement recommendations in `.orbital/artifacts/verification-report.md`, PASS with notes for future refactoring.
+
+---
+
+### HVP-5: Traceability Matrix Validation
+
+**Timing:** Final verification step before orbit closure.
+
+**Reviewer Action:**
+1. Open `.orbital/artifacts/test-execution-report.md`
+2. Review traceability matrix table
+3. Verify every automated test maps to Intent acceptance criteria
+4. Confirm no "orphan tests" (tests without clear intent justification)
+
+**Verification Checklist:**
+- [ ] Every test suite explicitly references Intent acceptance boundary
+- [ ] Edge case tests (division by zero, large numbers) map to "Target Success" criteria
+- [ ] Integration tests map to "operation chaining" and UI interaction requirements
+- [ ] Test count meets or exceeds Intent thresholds (20 minimum, 30 target, 40 exceptional)
+- [ ] Coverage gaps (if any) documented with justification
+
+**Intent Traceability:** Intent Acceptance Boundary (Target): "Test results document includes traceability matrix linking tests to original intent requirements"
 
 **Pass Criteria:** 
-- All buttons visually distinct by type
-- Layout does not break or overlap at 1920x1080 resolution
-- Text is readable with sufficient contrast
+- **Minimum Acceptable:** Test-to-intent mapping exists (even if informal)
+- **Target Success:** Formal traceability matrix table with explicit references
+- **Exceptional Achievement:** Bidirectional traceability (intent → tests AND tests → intent)
 
-**Failure Actions:** If visual distinction is unclear, request CSS adjustments to button colors or borders
-
----
-
-### Verification Point 2: Real-Time Display Updates
-**Objective:** Confirm display updates immediately as user interacts
-
-**Reviewer Actions:**
-1. Click number buttons in sequence: "1" → "2" → "3"
-2. Observe display after each click
-3. Click decimal point "."
-4. Observe display shows "123."
-5. Clear and repeat with rapid clicking
-
-**Assessment Criteria:**
-- Display updates appear within 100ms of button click (perceived as immediate)
-- No visible lag or delay between click and display change
-- Smooth updates without flicker or re-layout
-
-**Acceptance Boundary:** 
-- Target Range - "Display shows current input and updates in real-time as user interacts"
-- Quantitative Boundary - "Response time: Button click to display update < 100ms"
-
-**Pass Criteria:** 
-- Display changes perceptibly instantaneous on modern hardware
-- No dropped inputs during rapid clicking (5+ clicks per second)
-
-**Failure Actions:** If lag detected, investigate React re-render performance or CSS transitions causing delay
+**Failure Action:** If traceability incomplete: add mapping table to test execution report before orbit closure.
 
 ---
-
-### Verification Point 3: Clear/Reset Functionality
-**Objective:** Verify clear button resets calculator to initial state
-
-**Reviewer Actions:**
-1. Perform calculation: "5" + "3" = "8"
-2. Click "C" button
-3. Verify display shows "0"
-4. Input new number "9"
-5. Verify calculator operates normally
-6. Test clear during input: "1" → "2" → "C"
-7. Verify display resets to "0"
-8. Test clear after operator: "5" → "+" → "C"
-9. Verify display resets and next number input starts fresh
-
-**Assessment Criteria:**
-- Clear button returns display to "0"
-- Clear button resets all internal state (no remembered operators or operands)
-- After clear, calculator behaves as if freshly loaded
-
-**Acceptance Boundary:** Target Range - "Includes clear/reset functionality to start new calculations"
-
-**Pass Criteria:**
-- Display always resets to "0" after clear
-- No state pollution between calculations after clear
-- Clear works at any point in calculation sequence
-
-**Failure Actions:** If state persists, verify `handleClearClick()` resets all state variables
-
----
-
-### Verification Point 4: Keyboard Input Equivalence
-**Objective:** Confirm all keyboard inputs produce same results as mouse clicks
-
-**Reviewer Actions:**
-1. **Test numeric input:** Type "456" on keyboard, verify display shows "456"
-2. **Test operator keys:** 
-   - Type "5" → "+" → "3" → "Enter"
-   - Verify display shows "8"
-3. **Test decimal:** Type "7" → "." → "5"
-   - Verify display shows "7.5"
-4. **Test clear shortcut:** Type "Escape"
-   - Verify display resets to "0"
-5. **Test alternative clear:** Type "C" key
-   - Verify display resets to "0"
-6. **Test equals alternatives:**
-   - Type "2" → "+" → "2" → "=" → verify "4"
-   - Clear, then type "2" → "+" → "2" → "Enter" → verify "4"
-
-**Assessment Criteria:**
-- Every mouse-accessible function has keyboard equivalent
-- Keyboard inputs produce identical results to mouse clicks
-- No keyboard input causes unexpected behavior
-
-**Acceptance Boundary:** 
-- Target Range - "Keyboard number entry works in addition to button clicks"
-- Exceptional Ceiling - "Keyboard shortcuts for all operations (+ - * / Enter for equals, Escape for clear)"
-
-**Pass Criteria:**
-- All 10 number keys (0-9) work
-- All 4 operator keys (+, -, *, /) work
-- Decimal point key (.) works
-- Both Enter and = trigger equals
-- Both Escape and C/c trigger clear
-- Results match mouse-equivalent operations exactly
-
-**Failure Actions:** If keyboard input missing, verify `useEffect` event listener covers all required keys
-
----
-
-### Verification Point 5: Operation Chaining User Experience
-**Objective:** Verify consecutive operations feel natural and display intermediate results
-
-**Reviewer Actions:**
-1. **Test addition chain:**
-   - Click: "2" → "+" → "3"
-   - **Observe:** Display still shows "3"
-   - Click: "+"
-   - **Observe:** Display changes to "5"
-   - Click: "4" → "="
-   - **Observe:** Display shows "9"
-
-2. **Test mixed operation chain:**
-   - Click: "10" → "-" → "5"
-   - **Observe:** Display shows "5"
-   - Click: "*"
-   - **Observe:** Display shows "5" (result of 10-5)
-   - Click: "2" → "="
-   - **Observe:** Display shows "10" (5*2)
-
-3. **Test operator replacement:**
-   - Click: "7" → "+" → "-"
-   - **Observe:** No calculation occurs
-   - Click: "3" → "="
-   - **Observe:** Display shows "4" (7-3, not 7+3)
-
-**Assessment Criteria:**
-- Intermediate results display when pressing second operator
-- Operator replacement works intuitively without unintended execution
-- User does not need to press equals after every operation to see results
-
-**Acceptance Boundary:** 
-- Target Range - "consecutive operations chain correctly"
-- Exceptional Ceiling - "Operation chaining follows standard calculator conventions (displays intermediate results)"
-
-**Pass Criteria:**
-- Intermediate results match expected calculator behavior
-- No unexpected errors or state corruption during chaining
-- Behavior matches physical calculator conventions
-
-**Failure Actions:** If chaining behavior unexpected, review `handleOperatorClick()` logic and state machine transitions
-
----
-
-### Verification Point 6: Error State Recovery
-**Objective:** Verify error state provides clear feedback and requires intentional recovery
-
-**Reviewer Actions:**
-1. Trigger error: "8" → "/" → "0" → "="
-2. **Verify:** Display shows "Error"
-3. Attempt operation: Click "+" button
-4. **Verify:** Display still shows "Error" (operation blocked)
-5. Attempt number input: Click "5"
-6. **Verify:** Display still shows "Error" (input blocked)
-7. Recover: Click "C"
-8. **Verify:** Display resets to "0"
-9. Test functionality: "6" → "+" → "4" → "="
-10. **Verify:** Display shows "10" (calculator operational)
-
-**Assessment Criteria:**
-- Error message is clear and unambiguous
-- Calculator blocks all inputs except clear while in error state
-- Single clear action fully recovers calculator to operational state
-- No residual error state after recovery
-
-**Acceptance Boundary:** 
-- Target Range - "division by zero displays error state"
-- Risk mitigation - "Calculator requires clear action to recover, preventing cascading errors"
-
-**Pass Criteria:**
-- "Error" message visible and readable
-- All inputs blocked during error state
-- Clear button exits error state completely
-- No cascading errors after recovery
-
-**Failure Actions:** If inputs not blocked, add error state check to all input handlers
-
----
-
-### Verification Point 7: Decimal Input Handling
-**Objective:** Verify decimal point input follows standard calculator conventions
-
-**Reviewer Actions:**
-1. **Test single decimal:**
-   - Click: "5" → "." → "5"
-   - **Verify:** Display shows "5.5"
-
-2. **Test decimal prevention:**
-   - Click: "3" → "." → "1" → "."
-   - **Verify:** Display shows "3.1" (second decimal point ignored)
-
-3. **Test leading decimal:**
-   - Clear, then click: "." → "5"
-   - **Verify:** Display shows "0.5"
-
-4. **Test decimal after operator:**
-   - Click: "4" → "+" → "."
-   - **Verify:** Display shows "0."
-   - Click: "3"
-   - **Verify:** Display shows "0.3"
-
-**Assessment Criteria:**
-- Only one decimal point allowed per number
-- Leading decimal point automatically prepends "0"
-- Decimal point works after operator press
-- Decimal handling matches physical calculator behavior
-
-**Acceptance Boundary:** 
-- Functional Boundary - "decimal point support"
-- Target Range - "Calculator handles decimal numbers with at least 2 decimal places of precision"
-
-**Pass Criteria:**
-- Single decimal point per number enforced
-- All decimal input scenarios work as expected
-- No NaN or undefined values from decimal input
-
-**Failure Actions:** If multiple decimals allowed, verify `handleDecimalClick()` checks for existing decimal
-
----
-
-### Verification Point 8: Browser Compatibility
-**Objective:** Verify calculator functions in multiple modern browsers
-
-**Reviewer Actions:**
-1. Test in **Chrome** (latest version):
-   - Perform basic calculations
-   - Test keyboard input
-   - Verify visual appearance
-
-2. Test in **Firefox** (latest version):
-   - Perform basic calculations
-   - Test keyboard input
-   - Verify visual appearance
-
-3. Test in **Safari** (latest version, macOS only):
-   - Perform basic calculations
-   - Test keyboard input
-   - Verify visual appearance
-
-4. Test in **Edge** (latest version):
-   - Perform basic calculations
-   - Test keyboard input
-   - Verify visual appearance
-
-**Assessment Criteria:**
-- All functionality works identically across browsers
-- No browser-specific visual rendering issues
-- Keyboard events work in all browsers
-- No console errors in any browser
-
-**Acceptance Boundary:** Constraint - "Must function in modern evergreen browsers (Chrome, Firefox, Safari, Edge) released within the last 2 years"
-
-**Pass Criteria:**
-- Functional parity across all 4 browsers
-- Visual consistency (minor rendering differences acceptable)
-- No critical errors in any browser console
-
-**Failure Actions:** If browser-specific issues found, add browser-specific CSS prefixes or polyfills
-
----
-
-### Verification Point 9: Edge Case Robustness
-**Objective:** Verify calculator handles unexpected input sequences gracefully
-
-**Reviewer Actions:**
-1. **Test rapid clicking:**
-   - Click number button 10+ times rapidly
-   - Verify no duplicate inputs or missed clicks
-
-2. **Test operator-only sequence:**
-   - Click: "+" → "*" → "/"
-   - Verify no crash or undefined state
-   - Click "5" → "="
-   - Verify calculator still operational
-
-3. **Test equals without operation:**
-   - Clear, then click "5" → "="
-   - Verify display shows "5" (no-op)
-
-4. **Test multiple equals:**
-   - Click: "4" → "+" → "2" → "=" → "=" → "="
-   - Verify display remains "6" (does not repeat operation)
-
-5. **Test clear during calculation:**
-   - Click: "7" → "+" → "C" → "3" → "="
-   - Verify display shows "3" (fresh calculation after clear)
-
-**Assessment Criteria:**
-- No crashes or undefined states from unexpected sequences
-- Calculator recovers gracefully from edge cases
-- Behavior is predictable and consistent
-
-**Acceptance Boundary:** General robustness expectation across all acceptance boundaries
-
-**Pass Criteria:**
-- No console errors during edge case testing
-- Calculator state remains consistent
-- All edge cases resolve to reasonable behavior
-
-**Failure Actions:** If crash or undefined state occurs, add input validation or state guards
-
----
-
-### Verification Point 10: Documentation Accuracy
-**Objective:** Verify README instructions allow successful setup and usage
-
-**Reviewer Actions:**
-1. Follow README setup instructions exactly:
-   ```bash
-   git clone https://github.com/neerb/autonomous-repo.git
-   cd autonomous-repo
-   npm install
-   npm run dev
-   ```
-
-2. Verify all commands work without modification
-
-3. Review Usage section in README
-
-4. Test keyboard shortcuts listed in README:
-   - Verify each shortcut works as documented
-
-5. Check Technical Details section matches actual implementation:
-   - Verify React version matches package.json
-   - Verify Vite version matches package.json
-   - Verify precision claim (10 significant digits)
-
-**Assessment Criteria:**
-- All setup commands execute successfully
-- No missing steps in installation instructions
-- All documented features actually exist
-- No undocumented features critical to usage
-
-**Acceptance Boundary:** Implicit requirement for usable documentation
-
-**Pass Criteria:**
-- README allows zero-knowledge user to set up and run application
-- All documented features work as described
-- No misleading or outdated information
-
-**Failure Actions:** Update README with corrections or clarifications
 
 ## Intent Traceability
 
-### Traceability Matrix
+### Automated Test Coverage Mapping
 
-| Verification Gate/Point | Intent Acceptance Boundary | Rationale |
-|-------------------------|---------------------------|-----------|
-| **Automated Gate 1: Dev Server Launch** | Minimal Threshold - "Application launches successfully in local development environment without errors" | Direct verification of first acceptance criterion |
-| **Automated Gate 2: File Structure** | Implied by all boundaries - project must exist to function | Structural prerequisite for all other verification |
-| **Automated Gate 3: Basic Arithmetic** | Minimal Threshold - "All four basic operations (add, subtract, multiply, divide) produce mathematically correct results for integer inputs" | Direct test of core functionality requirement |
-| **Automated Gate 4: Decimal Precision** | Target Range - "Calculator handles decimal numbers with at least 2 decimal places of precision"<br>Quantitative Boundary - "Minimum 6 significant digits, target 10 significant digits" | Verifies precision requirements with specific test cases |
-| **Automated Gate 5: Division by Zero** | Target Range - "Handles basic edge cases: division by zero displays error state" | Directly tests specified edge case handling |
-| **Automated Gate 6: Keyboard Parity** | Target Range - "Keyboard number entry works in addition to button clicks"<br>Exceptional Ceiling - "Keyboard shortcuts for all operations" | Verifies keyboard input requirement (manual verification required) |
-| **Automated Gate 7: Display Capacity** | Quantitative Boundary - "Display capacity: Shows at least 12 characters in the numeric display" | Tests display capacity specification |
-| **Automated Gate 8: Operation Chaining** | Target Range - "consecutive operations chain correctly"<br>Exceptional Ceiling - "Operation chaining follows standard calculator conventions (displays intermediate results)" | Verifies operation chaining behavior |
-| **Automated Gate 9: Git Hygiene** | Implied by professional development standards | Ensures repository cleanliness |
-| **Automated Gate 10: Dependencies** | Dependency - "React library — Core framework for UI components and rendering"<br>Dependency - "Node.js runtime environment — Version 18.x or higher" | Validates declared dependencies are met |
-| **Human VP 1: Visual Interface** | Minimal Threshold - "Visual interface displays a numeric display area and operation buttons that respond to clicks"<br>Target Range - "Visual feedback distinguishes between number buttons, operation buttons, and action buttons" | Human assessment of UI design quality |
-| **Human VP 2: Real-Time Updates** | Target Range - "Display shows current input and updates in real-time as user interacts"<br>Quantitative Boundary - "Response time: Button click to display update < 100ms" | Human perception of responsiveness |
-| **Human VP 3: Clear Functionality** | Target Range - "Includes clear/reset functionality to start new calculations" | Direct test of clear button requirement |
-| **Human VP 4: Keyboard Equivalence** | Target Range - "Keyboard number entry works in addition to button clicks"<br>Exceptional Ceiling - "Keyboard shortcuts for all operations (+ - * / Enter for equals, Escape for clear)" | Comprehensive keyboard input testing |
-| **Human VP 5: Operation Chaining UX** | Target Range - "consecutive operations chain correctly"<br>Exceptional Ceiling - "Operation chaining follows standard calculator conventions (displays intermediate results)" | Human assessment of chaining behavior intuitiveness |
-| **Human VP 6: Error Recovery** | Target Range - "division by zero displays error state"<br>Risk Assessment - "Calculator requires clear action to recover, preventing cascading errors" | Verifies error handling user experience |
-| **Human VP 7: Decimal Handling** | Functional Boundary - "decimal point support"<br>Target Range - "Calculator handles decimal numbers with at least 2 decimal places of precision" | Human verification of decimal input conventions |
-| **Human VP 8: Browser Compatibility** | Constraint - "Must function in modern evergreen browsers (Chrome, Firefox, Safari, Edge) released within the last 2 years" | Direct test of browser compatibility requirement |
-| **Human VP 9: Edge Case Robustness** | Implicit across all acceptance boundaries | Ensures calculator handles unexpected inputs gracefully |
-| **Human VP 10: Documentation** | Implied by professional development standards and usability requirements | Verifies README enables successful setup |
+| Intent Acceptance Criterion | Automated Gate | Test Count | Status Field |
+|------------------------------|----------------|------------|--------------|
+| **Minimum: 20+ test cases covering all 4 operations** | Gate 2: Unit Test Execution | 32 unit tests (8 per operation) | `numTotalTests >= 20` in JSON |
+| **Minimum: Test zero as operand for each operation** | Gate 2: Calculator Logic Tests | 8 zero-operand tests (2 per operation) | Tests with "zero" in description |
+| **Minimum: Test positive/negative numbers** | Gate 2: Calculator Logic Tests | 16 sign-variation tests | Tests with "positive"/"negative" in name |
+| **Minimum: Test decimal inputs** | Gate 2: Calculator Logic Tests | 8 decimal tests | Tests with "decimal"/"floating" in name |
+| **Minimum: Machine-readable output** | Gate 6: Output Format Validation | N/A | JSON file exists, parseable |
+| **Minimum: 100% tests execute without errors** | Gates 2-4: All test executions | All tests | `testResults[].status != "error"` |
+| **Target: 30+ test cases** | Gates 2-4: Combined test count | 43 total tests | `numTotalTests >= 30` |
+| **Target: Integration tests (UI interactions)** | Gate 4: Integration Test Execution | 5 workflow tests | Integration test suite passes |
+| **Target: Edge cases (division by zero, large numbers)** | Gate 2: Calculator Logic Tests | 8 edge case tests | Specific edge case test names |
+| **Target: Traceability matrix** | HVP-5: Traceability Validation | N/A | Matrix table exists in report |
+| **Exceptional: 40+ test cases** | Gates 2-4: Combined count | 43 tests | `numTotalTests >= 40` |
+| **Constraint: <30 second execution** | Gate 5: Performance Budget | N/A | `time npm test` output ≤30s |
+| **Constraint: <10MB testing libraries** | Gate 1: Infrastructure Validation | N/A | `du -sh` output ≤10MB |
+| **Constraint: No production code mods** | Gate 7: Production Code Integrity | N/A | Git diff shows no src/components or src/utils changes |
 
-### Coverage Analysis
+### Manual Verification Coverage Mapping
 
-**Minimal Acceptance Threshold:** 100% Coverage
-- Application launch: Gate 1
-- Four operations correctness: Gate 3
-- Visual interface: VP 1
-- Two-number operation execution: Gate 3, VP 1
+| Intent Acceptance Criterion | Human Verification Point | Evidence Location | Pass Threshold |
+|------------------------------|-------------------------|-------------------|----------------|
+| **Minimum: 8+ interactive scenarios** | HVP-3: Manual Checklist Execution | `.orbital/artifacts/manual-verification-checklist.md` | ≥8 scenarios documented |
+| **Target: Visual validation (display formatting)** | HVP-3: Manual Checklist (Scenarios 5, 6) | Manual checklist "Actual Result" column | Pass notes mention formatting |
+| **Target: Error state validation** | HVP-3: Manual Checklist (Scenario 3) | Manual checklist division by zero result | Error handling graceful |
+| **Constraint: Vite-based setup unchanged** | HVP-1: API Inspection, HVP-4: Arch Review | Code review notes | No Vite config broken |
+| **Trust Tier: Learning opportunity (quality patterns)** | HVP-4: Test Strategy Review | Reviewer architectural assessment | Senior engineer approval |
+| **Dependency: Calculator.js API stability** | HVP-1: Calculator Logic API Inspection | API documentation in test README | Tests call correct functions |
+| **Dependency: Component prop interfaces** | HVP-2: Component Prop Review | PropType validation in test output | No PropType warnings |
 
-**Target Acceptance Range:** 95% Coverage
-- Decimal support: Gate 4, VP 7
-- Real-time updates: VP 2
-- Clear functionality: VP 3
-- Division by zero: Gate 5, VP 6
-- Operation chaining: Gate 8, VP 5
-- Keyboard input: Gate 6 (partial), VP 4
-- Visual button distinction: VP 1
+### Verification Completeness Check
 
-**Exceptional Acceptance Ceiling:** 60% Coverage
-- ✅ Keyboard shortcuts: VP 4 (IMPLEMENTED)
-- ✅ Operation chaining intermediate results: VP 5 (IMPLEMENTED)
-- ❌ Responsive layout: NOT IMPLEMENTED (per non-goals)
-- ❌ Thousand separators: NOT IMPLEMENTED (scope management)
-- ✅ Error state messages: Gate 5, VP 6 (PARTIAL - "Error" displayed, not detailed messages)
-- ❌ Accessible keyboard navigation: NOT IMPLEMENTED (standard tab order only)
+**All Intent constraints verified:**
+- ✅ No production code modifications (Gate 7)
+- ✅ Vite/React/Node.js compatibility (Gate 1)
+- ✅ <10MB testing library footprint (Gate 1)
+- ✅ <30 second execution time (Gate 5)
+- ✅ Verification-only scope (Gate 7)
+- ✅ Chrome/Chromium environment (HVP-3: manual tests in browser)
 
-**Quantitative Boundaries:** 100% Coverage
-- Numeric precision: Gate 4
-- Response time: VP 2
-- Display capacity: Gate 7
-- Error tolerance: Gates 3, 4, 5
+**All Intent acceptance boundaries addressed:**
+- ✅ Minimum: 20+ tests (Gate 2-4: 43 total tests)
+- ✅ Minimum: 8+ manual scenarios (HVP-3: 8 scenarios)
+- ✅ Minimum: Machine-readable output (Gate 6: JSON reporter)
+- ✅ Minimum: 100% execution without errors (Gate 2-4: exit codes)
+- ✅ Target: 30+ tests (Gate 2-4: 43 total tests)
+- ✅ Target: Integration tests (Gate 4: 5 workflow tests)
+- ✅ Target: Traceability matrix (HVP-5: matrix validation)
+- ✅ Exceptional: 40+ tests (Gate 2-4: 43 total tests achieves this)
 
-### Uncovered Areas (Intentional)
+**No orphan verification activities:** Every gate and HVP explicitly references Intent document section.
 
-The following acceptance boundary items are intentionally NOT verified as they fall under documented non-goals:
-
-1. **Mobile-specific responsive optimization** — Desktop-first design per constraints
-2. **Multi-theme customization** — Non-goal per intent document
-3. **Advanced accessibility features** — Beyond standard HTML semantics per non-goals
-4. **Unit testing infrastructure** — Non-goal per intent document
-5. **CI/CD pipelines** — Non-goal per intent document
+---
 
 ## Escape Criteria
 
-### Escape Trigger 1: Critical Automated Gate Failure
+### Escape Path 1: Automated Gate Failure (Gates 2-6)
 
-**Condition:** Any of Gates 1-5 fail (dev server, file structure, basic operations, decimals, division by zero)
+**Trigger:** Any automated test gate reports <100% test execution success OR performance budget exceeded.
 
-**Severity:** Critical — Core functionality broken
+**Assessment:**
+1. **Critical Failure (≥25% tests failing):**
+   - BLOCK orbit immediately
+   - Do NOT proceed to human verification
+   - Likely root cause: API mismatch between tests and implementation
+   - **Escalation:** Require HVP-1 (API Inspection) before any test reruns
 
-**Re-Orbit Required:** Yes
+2. **Moderate Failure (10-24% tests failing):**
+   - PAUSE orbit for investigation
+   - Run failing tests individually to isolate issues
+   - If failures due to timing issues (async), optimize with `waitFor` or `act()`
+   - If failures due to wrong assertions, validate against actual implementation behavior
+   - **Re-orbit Threshold:** If fixes require >2 hours, re-orbit Phase 2 or Phase 3
 
-**Actions:**
-1. **Immediate:** Halt verification process, do not proceed to human verification
-2. **Investigation:** Review implementation logs, identify root cause of failure
-3. **Decision Point:** 
-   - If fixable with minor code change (< 30 minutes): Apply fix, re-run gates
-   - If requires architectural change: Full re-orbit required
-4. **Re-Orbit Scope:** Address specific failed gate, maintain all passing gates
-5. **Verification Reset:** Re-run all automated gates from beginning after fixes
+3. **Minor Failure (<10% tests failing):**
+   - CONDITIONAL PASS if failures are known edge cases
+   - Document failures in `.orbital/artifacts/known-limitations.md`
+   - Proceed to human verification with reviewer awareness
+   - **Future Orbit:** Create new intent to address known limitations
 
-**Escalation Trigger:** If same gate fails twice after fixes, escalate to senior engineer for architecture review
+**Re-orbit Conditions:**
+- Test count falls below Intent "Minimum Acceptable" (20 tests) → Re-orbit Phase 2 (Unit Tests)
+- Integration tests cannot simulate user interactions → Re-orbit Phase 3 (Integration Tests)
+- Performance budget exceeded by >10 seconds → Optimize tests or reduce scope to meet constraint
 
----
+**Rollback Procedure:**
+```bash
+# Revert test commits
+git reset --hard HEAD~1
 
-### Escape Trigger 2: Multiple Automated Gate Failures
+# Uninstall test dependencies
+npm uninstall vitest jsdom @testing-library/react @testing-library/user-event @testing-library/jest-dom
 
-**Condition:** 3 or more automated gates (Gates 1-10) fail simultaneously
+# Delete test files
+rm -rf src/test/ vitest.config.js
 
-**Severity:** High — Systemic implementation issue
-
-**Re-Orbit Required:** Yes
-
-**Actions:**
-1. **Immediate:** Abort verification, mark orbit as failed
-2. **Root Cause Analysis:** Determine if failures are related or independent
-3. **Re-Implementation Decision:**
-   - If related failures: Address common root cause
-   - If independent failures: Consider full re-orbit from Phase 3 (Core Implementation)
-4. **Human Review:** Require architecture review before re-orbit begins
-5. **Scope Adjustment:** Evaluate if acceptance boundaries need clarification
-
-**Escalation Trigger:** Multiple gate failures suggest potential misalignment between intent and implementation — escalate to intent author for clarification
-
----
-
-### Escape Trigger 3: Human Verification Point Failures
-
-**Condition:** 2 or more Human Verification Points (VP 1-10) fail assessment
-
-**Severity:** Medium to High — UX or integration issues
-
-**Re-Orbit Required:** Conditional
-
-**Actions:**
-1. **Assessment:** Determine severity of each failure:
-   - **Critical VP failures** (VP 1 Visual Interface, VP 3 Clear Function, VP 6 Error Recovery): Require re-orbit
-   - **Moderate VP failures** (VP 2 Real-Time, VP 4 Keyboard, VP 5 Chaining): May be fixable without re-orbit
-   - **Minor VP failures** (VP 9 Edge Cases, VP 10 Documentation): Fixable with patches
-
-2. **Fix Attempt:**
-   - Critical failures: Re-orbit required
-   - Moderate failures: Attempt fix, re-verify specific VP
-   - Minor failures: Apply patch, document in Human Modifications section
-
-3. **Verification Reset:** After fixes, re-verify all Human VPs that depend on modified components
-
-**Escalation Trigger:** If human reviewer cannot definitively assess pass/fail, escalate for additional reviewer consensus
+# Restore package.json
+git checkout package.json
+```
 
 ---
 
-### Escape Trigger 4: Browser Compatibility Failure
+### Escape Path 2: Production Code Integrity Violation (Gate 7)
 
-**Condition:** Verification Point 8 (Browser Compatibility) fails in 1+ browsers
+**Trigger:** Git diff shows modifications to production files in `src/components/`, `src/utils/`, or core application files.
 
-**Severity:** High — Violates explicit constraint
+**Assessment:**
+- **CRITICAL BLOCKER:** This violates Intent constraint "No modifications to existing calculator logic"
+- **Immediate Action:** HALT all verification activities
 
-**Re-Orbit Required:** Conditional
+**Escalation Procedure:**
+1. Identify which production files were modified
+2. Determine if modifications are accidental (developer error) or necessary (test coupling)
+3. If accidental: rollback changes, re-run verification from Gate 1
+4. If necessary (e.g., tests require new exports from calculator.js):
+   - **ESCALATE to Trust Tier 3 review:** Production code changes require human approval
+   - Document why changes are necessary in `.orbital/artifacts/production-code-justification.md`
+   - Request human reviewer assess if changes are minimal and safe
+   - If approved: update Intent document to reflect revised scope
+   - If rejected: re-orbit with revised test strategy that avoids production changes
 
-**Actions:**
-1. **Scope Assessment:**
-   - **Single browser failure:** Investigate browser-specific issue
-   - **Multiple browser failures:** Likely fundamental compatibility issue requiring re-orbit
+**Rollback Procedure:**
+```bash
+# Hard rollback to last clean commit
+git reset --hard <last-clean-commit-sha>
 
-2. **Fix Strategy:**
-   - Single browser: Add polyfills, CSS prefixes, or browser-specific fixes
-   - Multiple browsers: Review for use of non-standard APIs, re-implement with compatible alternatives
+# Verify no production changes
+git diff HEAD --name-only | grep -E '^src/(components|utils)/'
 
-3. **Testing:** After fixes, re-test in all 4 required browsers (Chrome, Firefox, Safari, Edge)
+# If grep returns nothing, rollback successful
+```
 
-4. **Documentation:** If browser-specific fixes applied, document in README as known considerations
-
-**Escalation Trigger:** If compatibility cannot be achieved with standard web APIs, escalate for constraint re-evaluation
-
----
-
-### Escape Trigger 5: Acceptance Boundary Misalignment
-
-**Condition:** Implementation achieves verification but reviewer assesses it does not meet intent
-
-**Severity:** High — Fundamental misunderstanding of requirements
-
-**Re-Orbit Required:** Yes
-
-**Actions:**
-1. **Intent Review:** Re-examine Intent Document with reviewer
-2. **Gap Analysis:** Identify specific misalignments between implementation and desired outcome
-3. **Verification Protocol Update:** Add missing verification criteria if intent was not fully captured
-4. **Re-Orbit Scope:** Address misalignment while preserving correct implementations
-5. **Trajectory Adjustment:** If misalignment is severe, may require new intent in trajectory
-
-**Escalation Trigger:** Automatic — misalignment between intent and implementation requires human judgment call
+**Re-orbit Gate:** Cannot proceed with orbit closure until Gate 7 passes cleanly.
 
 ---
 
-### Escape Trigger 6: Performance Degradation
+### Escape Path 3: Manual Verification Checklist Failure (HVP-3)
 
-**Condition:** Verification Point 2 (Real-Time Updates) fails to meet < 100ms response time
+**Trigger:** ≥2 of 8 manual scenarios fail during human verification.
 
-**Severity:** Medium — Performance requirement violation
+**Assessment:**
+1. **Catastrophic Failure (≥4 scenarios fail):**
+   - Likely root cause: Automated tests not validating actual user experience
+   - Tests may pass but application broken
+   - **BLOCK orbit closure**
+   - **Escalation:** Full review of Calculator.jsx implementation required
+   - **Action:** Create new intent to fix underlying calculator bugs (separate from verification orbit)
 
-**Re-Orbit Required:** Conditional
+2. **Significant Failure (2-3 scenarios fail):**
+   - **CONDITIONAL BLOCK**
+   - Investigate if failures are:
+     - Visual only (formatting, CSS) → Document, pass with recommendations
+     - Functional (calculations wrong) → BLOCK, fix calculator implementation in new orbit
+     - Edge cases not covered by automated tests → Add missing automated tests, re-run Gate 2-4
+   - **Re-orbit Threshold:** If missing test coverage identified, re-orbit Phase 2 to add tests
 
-**Actions:**
-1. **Profiling:** Use browser DevTools to identify performance bottleneck
-2. **Root Cause Categories:**
-   - **React re-render issue:** Optimize component structure, add useMemo/useCallback
-   - **CSS transition delay:** Reduce transition duration or remove
-   - **Calculation complexity:** Optimize calculation utility functions
+3. **Minor Failure (1 scenario fails):**
+   - Document as known limitation
+   - PASS orbit with note for future improvement
+   - Add issue to backlog for future orbit
 
-3. **Fix Application:**
-   - Minor optimization (< 1 hour work): Apply fix, re-verify VP 2
-   - Major refactoring required: Re-orbit from Phase 3
+**Re-orbit Conditions:**
+- If failures reveal automated tests insufficient → Re-orbit Phase 2 with expanded test cases
+- If failures reveal integration tests don't match real usage → Re-orbit Phase 3 with revised workflows
+- If failures reveal production bugs → HALT verification orbit, create new orbit for bug fixes
 
-4. **Verification:** Measure response time with browser DevTools Performance tab after fixes
-
-**Escalation Trigger:** If performance cannot meet < 100ms target on modern hardware, escalate for acceptance boundary re-evaluation
-
----
-
-### Escape Trigger 7: Security or Dependency Vulnerability
-
-**Condition:** Automated Gate 10 reveals outdated or vulnerable dependencies
-
-**Severity:** Medium — Security consideration
-
-**Re-Orbit Required:** No (patch in place)
-
-**Actions:**
-1. **Assessment:** Run `npm audit` to identify vulnerabilities
-2. **Update Strategy:**
-   - Update vulnerable dependencies to latest stable versions
-   - Re-run all automated gates after updates
-   - Verify no breaking changes introduced
-
-3. **Documentation:** Update README if dependency versions change significantly
-
-4. **Testing:** Full verification cycle after dependency updates
-
-**Escalation Trigger:** If vulnerability cannot be resolved with dependency updates, escalate for alternative implementation discussion
+**Escalation Trigger:** If manual verification consistently contradicts automated test results, escalate to senior engineer for test strategy review.
 
 ---
 
-### Rollback Procedure
+### Escape Path 4: Performance Budget Violation (Gate 5)
 
-**Condition:** Verification failures cannot be resolved through fixes or re-orbit is deemed too costly
+**Trigger:** Test execution exceeds 30-second Intent constraint.
 
-**Actions:**
-1. **Repository State:** Revert repository to pre-orbit commit
-2. **Documentation:** Create rollback report documenting:
-   - Which verification gates failed
-   - Root cause of failures
-   - Lessons learned for future orbit attempts
+**Assessment:**
+1. **Measure breakdown:** Run each test suite individually to identify bottleneck
+2. **Optimization attempts (in order):**
+   - Reduce `waitFor` timeouts in integration tests (default 1000ms → 500ms)
+   - Use `userEvent.setup()` instead of `fireEvent` for faster interactions
+   - Parallelize test suites if running serially
+   - Remove unnecessary `act()` wrappers
 
-3. **Trajectory Adjustment:** Re-evaluate intent and consider:
-   - Scope reduction for next orbit attempt
-   - Acceptance boundary clarification
-   - Alternative implementation approach
+3. **If optimization insufficient:**
+   - **Scope reduction decision:** Reduce test count to meet budget while maintaining Intent "Minimum Acceptable"
+   - Priority order: Keep integration tests > unit tests > component tests
+   - Document removed tests in `.orbital/artifacts/deferred-tests.md`
+   - PASS orbit with reduced scope, create follow-up intent for additional coverage
 
-4. **Stakeholder Communication:** Notify project owner of rollback and reasons
+**Re-orbit Threshold:** If budget exceeded by >50% (>45 seconds), re-orbit Phase 3 with redesigned integration tests.
 
-**Criteria for Rollback:**
-- 2+ critical automated gate failures after fix attempts
-- Implementation fundamentally misaligned with intent
-- Human reviewer determines implementation quality unacceptable
-- Cost of fixes exceeds cost of full re-implementation
+**Rollback Not Required:** Performance issues don't compromise test validity, only CI/CD integration.
 
 ---
 
-### Success Criteria for Orbit Completion
+### Escape Path 5: Dependency Size Constraint Violation (Gate 1)
 
-**Orbit completes successfully when ALL of the following are true:**
+**Trigger:** Testing library footprint exceeds 10MB Intent constraint.
 
-1. ✅ All 10 Automated Gates pass
-2. ✅ All 10 Human Verification Points pass
-3. ✅ Intent Traceability Matrix shows ≥90% coverage of Minimal + Target acceptance boundaries
-4. ✅ No escape triggers activated OR all activated escape triggers resolved
-5. ✅ Human reviewer provides explicit sign-off in Human Modifications section
-6. ✅ Repository is in clean state (all changes committed, no uncommitted artifacts)
-7. ✅ README accurately reflects implemented functionality
+**Assessment:**
+1. **Measure actual sizes:**
+   ```bash
+   du -sh node_modules/vitest
+   du -sh node_modules/jsdom
+   du -sh node_modules/@testing-library
+   ```
 
-**Final Verification Checklist:**
-- [ ] All automated gates executed and passed
-- [ ] All human verification points completed and documented
-- [ ] No outstanding escape conditions
-- [ ] Code committed to repository
-- [ ] Human reviewer sign-off obtained
-- [ ] Orbit marked as "completed" in ORBITAL system
+2. **Optimization sequence:**
+   - Remove optional dependency `@testing-library/jest-dom` (saves ~2MB)
+   - Replace `jsdom` with `happy-dom` (lighter alternative)
+   - Use Vitest minimal install (exclude UI and browser mode plugins)
+
+3. **If still exceeds constraint:**
+   - **ESCALATE:** Request Intent constraint revision with justification
+   - Alternative: Use Jest instead of Vitest (ironic, but may have better tree-shaking)
+   - Last resort: Write tests without Testing Library (plain DOM APIs)
+
+**Re-orbit Threshold:** If cannot meet constraint after optimizations, re-orbit Phase 1 with alternative testing stack.
+
+**Rollback Procedure:**
+```bash
+npm uninstall <oversized-package>
+npm install <lighter-alternative>
+# Re-run Gate 1
+```
+
+---
+
+### Escape Path 6: Test-Production Bundle Contamination (Gate 8)
+
+**Trigger:** Test libraries appear in production build output.
+
+**Assessment:**
+- **ROOT CAUSE:** Likely production code accidentally imports test utilities
+- **CRITICAL:** This violates deployment integrity
+
+**Remediation Steps:**
+1. Search for any imports of test libraries in production code:
+   ```bash
+   grep -r "from 'vitest'" src/components/ src/utils/
+   grep -r "from '@testing-library" src/components/ src/utils/
+   ```
+
+2. If found: Remove imports, ensure production code never references test utilities
+
+3. Add Vite build exclusions:
+   ```javascript
+   // vite.config.js
+   export default {
+     build: {
+       rollupOptions: {
+         external: ['vitest', '@testing-library/*', 'jsdom']
+       }
+     }
+   }
+   ```
+
+4. Re-run `npm run build` and verify `dist/` folder clean
+
+**Rollback Procedure:** If contamination unfixable, rollback entire orbit and redesign test isolation strategy.
+
+---
+
+### Orbit Closure Decision Matrix
+
+| Gates Passed | HVPs Passed | Manual Checklist | Decision |
+|--------------|-------------|------------------|----------|
+| All 8 gates | All 5 HVPs | ≥7 of 8 scenarios | **PASS** - Close orbit, merge PR |
+| All 8 gates | All 5 HVPs | 6 of 8 scenarios | **CONDITIONAL PASS** - Document known limitations, close orbit |
+| All 8 gates | 4 of 5 HVPs | ≥6 of 8 scenarios | **CONDITIONAL PASS** - Senior engineer approval required |
+| 7 of 8 gates | All 5 HVPs | ≥6 of 8 scenarios | **INVESTIGATE** - Determine if failed gate is critical |
+| ≤6 of 8 gates | Any | Any | **BLOCK** - Re-orbit required |
+| Any | ≤3 of 5 HVPs | Any | **ESCALATE** - Human review found critical issues |
+| Any | Any | ≤5 of 8 scenarios | **BLOCK** - Manual verification reveals broken functionality |
+
+**Final Approval Authority:** For Tier 2 (Supervised) orbit, senior engineer must sign off even on PASS conditions before orbit closure.
