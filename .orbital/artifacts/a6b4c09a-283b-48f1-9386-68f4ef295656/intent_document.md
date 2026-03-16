@@ -90,20 +90,22 @@ A developer clones this repository, runs `npm install && npm run dev`, and sees 
 **Tier 2: Supervised**
 
 **Rationale:**
-This orbit involves scaffolding a complete project structure from scratch with external dependencies (Three.js, Vite) and precise technical requirements. While the scope is small (4 files, ~100 lines), the risk profile includes:
+This orbit involves validating and potentially regenerating a complete project structure with external dependencies (Three.js, Vite) and precise technical requirements. While the scope is small (4 files, ~100 lines), the risk profile includes:
 
 - **Dependency Version Alignment:** Three.js 0.160.0+ introduces breaking changes in module paths (OrbitControls moved to `/examples/jsm/`). Incorrect import paths will cause runtime errors.
 - **Build Tool Configuration:** Vite requires specific `package.json` structure (`"type": "module"`, correct script definitions) that must align with ES6 imports in source code.
 - **Viewport CSS Precision:** Achieving true full-viewport canvas with no scrollbars requires exact CSS reset rules (margin, padding, overflow) that are easy to misconfigure.
 - **Three.js API Surface:** While well-documented, Three.js has multiple camera types, material types, and lighting configurations. Using incorrect combinations (e.g., `MeshBasicMaterial` ignoring lights) would meet syntactic requirements but fail visual intent.
+- **Validation vs. Regeneration Decision:** Orbit must read existing files from prior orbit c71c2625, determine compliance, and conditionally overwrite — this requires human review to confirm correct preservation/regeneration logic.
 
 **Supervision Requirements:**
-- **Pre-Execution Review:** Human reviews generated file contents before writing to disk to verify import paths, CSS reset completeness, and package.json script syntax.
-- **Post-Execution Validation:** Human runs `npm install && npm run dev` and visually confirms cube rotation, OrbitControls responsiveness, and absence of console errors.
+- **Pre-Execution Review:** Human reviews validation checklist and file generation plan to confirm correct criteria being applied
+- **Post-Execution Validation:** Human runs `npm install && npm run dev` and visually confirms cube rotation, OrbitControls responsiveness, viewport coverage, and absence of console errors
+- **File Preservation Verification:** Human confirms that compliant files from orbit c71c2625 were preserved and only non-compliant files were regenerated
 
-**Not Tier 1 (Autonomous):** Too many external dependencies and potential for subtle misconfigurations that automated tests cannot reliably catch without browser automation infrastructure.
+**Not Tier 1 (Autonomous):** Too many external dependencies, precise CSS requirements, and need to make preservation-vs-regeneration decisions that could silently fail without visual confirmation.
 
-**Not Tier 3 (Gated):** No security surface (no user input, no network requests, no file system access beyond dev server), no data persistence, and limited blast radius (worst case: developer deletes broken files and starts over).
+**Not Tier 3 (Gated):** No security surface (no user input, no network requests, no file system access beyond dev server), no data persistence, and limited blast radius (worst case: developer deletes broken files and re-runs orbit or manually fixes).
 
 ## Dependencies
 
@@ -120,15 +122,16 @@ This orbit involves scaffolding a complete project structure from scratch with e
 - **Modern Web Browser:** Chrome 90+, Firefox 88+, Safari 14+, or Edge 90+ (WebGL 2.0 support required)
 
 ### Prior Orbit Dependencies
-- **Orbit c71c2625-0f6b-441c-a24b-a5d187d1ae16:** Previous attempt created `package.json` successfully but did not generate implementation files (`index.html`, `src/main.js`, `src/style.css`). Current orbit inherits compliant `package.json` and must generate the missing 3 files.
+- **Orbit c71c2625-0f6b-441c-a24b-a5d187d1ae16:** Previous orbit created `package.json`, `index.html`, `src/main.js`, and `src/style.css`. Current orbit must validate these files against acceptance boundaries and conditionally regenerate only non-compliant files to minimize unnecessary filesystem mutations.
 
 ### File System Dependencies
-- **Repository Root Access:** Must create files at paths:
+- **Repository Root Access:** Must read and potentially write files at paths:
   - `./index.html`
   - `./src/main.js`
   - `./src/style.css`
-- **`src/` Directory:** Must exist or be created before writing `main.js` and `style.css`
-- **Preserve Existing Files:** Do not modify `./README.md`, `./.orbital/` artifacts, or existing `./package.json`
+  - `./package.json` (read-only validation — confirmed compliant in prior artifacts)
+- **`src/` Directory:** Must exist before reading/writing `main.js` and `style.css`
+- **Preserve Existing Files:** Do not modify `./README.md` or `./.orbital/` artifacts
 
 ### Knowledge Dependencies
 - **Three.js Documentation:** Official docs at threejs.org for API reference (camera setup, renderer options, material properties)
