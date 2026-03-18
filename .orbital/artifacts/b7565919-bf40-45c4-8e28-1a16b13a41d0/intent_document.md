@@ -2,124 +2,117 @@
 
 ## Desired Outcome
 
-A developer can clone or initialize this repository, run a single command (`npm install && npm run dev`), and immediately see a functioning Three.js scene with an interactive rotating cube in their browser. The project serves as a minimal, educational starting point for learning Three.js with modern tooling (Vite), requiring no additional configuration or setup steps. The outcome demonstrates that modern 3D web development can be accessible with under 100 lines of vanilla JavaScript, no framework complexity, and instant hot-reload during development.
+Developers can immediately start building 3D web experiences by cloning this repository and running a single command (`npm run dev`). The project demonstrates core Three.js concepts (scene, camera, lighting, geometry, materials, controls) through a working example that renders in under 2 seconds on modern browsers. The codebase serves as a learning reference that new developers can understand in one read-through, with no framework abstractions or build complexity obscuring the fundamentals.
 
 ## Constraints
 
-### Technology Stack
-- **Build Tool:** Vite only — no Webpack, Rollup, or other bundlers
-- **Language:** Vanilla JavaScript (ES modules) — no TypeScript, no Babel transforms
-- **3D Library:** Three.js latest stable version (^0.160.0 or newer)
-- **Frameworks:** None — no React, Vue, Svelte, or any component framework
+**Technology Boundaries:**
+- Vite as the only build tool — no webpack, rollup, or custom bundlers
+- Vanilla JavaScript (ES6+) only — no TypeScript, JSX, or transpilation beyond Vite defaults
+- Three.js as the sole runtime dependency — no helper libraries, UI frameworks, or utility packages
+- OrbitControls from Three.js examples — no custom camera control implementations
 
-### Code Complexity
-- **Line Count:** Total JavaScript in `src/main.js` must not exceed 100 lines (excluding blank lines and comments)
-- **File Structure:** Exactly 4 files: `index.html`, `src/main.js`, `src/style.css`, `package.json`
-- **Dependencies:** Only `three` (production) and `vite` (dev) in package.json
+**Code Size Limits:**
+- `src/main.js` must remain under 100 lines including comments
+- Total project size (excluding node_modules) must not exceed 10KB
+- No code splitting or lazy loading — single entry point only
 
-### Visual Requirements
-- **Background Color:** Dark theme with scene background set to `0x1a1a2e` or similar dark hex value
-- **Canvas Layout:** Full-viewport canvas with no margins, padding, or scroll bars
-- **Responsive:** Canvas must automatically resize when browser window dimensions change
+**Visual Requirements:**
+- Canvas must fill 100% of viewport with no scrollbars or overflow
+- Background color must be dark (`0x1a1a2e` or similar dark hex)
+- Scene must be visible immediately on load with no loading states or spinners
+- Animation must run at 60fps on devices capable of hardware acceleration
 
-### Scene Architecture
-- **Geometry:** Single cube (BoxGeometry) only — no additional meshes
-- **Material:** MeshStandardMaterial — requires lighting to be visible
-- **Lighting:** Exactly two light sources: one AmbientLight and one DirectionalLight
-- **Camera:** PerspectiveCamera with FOV, aspect ratio, near/far planes configured for a visible cube
-- **Controls:** OrbitControls imported from `three/examples/jsm/controls/OrbitControls.js` for camera manipulation
-- **Animation:** Continuous rotation on both X and Y axes using `requestAnimationFrame`
+**Architecture Restrictions:**
+- No global state management patterns — all variables scoped to module or function
+- No class-based architecture — functional programming patterns only
+- No external asset loading (textures, models, fonts) — procedural geometry only
+- No build-time code generation or preprocessor macros
 
-### Non-Goals
-- **Advanced Features:** No post-processing, shadows, textures, models, or particle systems
-- **Testing:** No unit tests, integration tests, or E2E tests required
-- **Documentation:** No inline JSDoc comments or README tutorials beyond basic setup
-- **Build Output:** No production build optimization or distribution artifacts
+**Non-Goals:**
+- Production optimization (tree-shaking, minification) beyond Vite defaults
+- Cross-browser support for IE11 or legacy browsers
+- Mobile-specific touch controls or responsive breakpoints
+- Accessibility features (ARIA, keyboard navigation, screen reader support)
+- Error handling or fallback for WebGL unavailability
 
 ## Acceptance Boundaries
 
-### Functional Completeness
-| Criterion | Minimum Acceptable | Ideal |
-|-----------|-------------------|-------|
-| Scene renders on page load | Cube visible within 2 seconds of page load | Cube visible within 500ms |
-| Rotation animation | Smooth 60fps rotation visible on both axes | No frame drops, consistent rotation speed |
-| Window resize handling | Canvas resizes without page refresh | Canvas and camera aspect update within one frame |
-| OrbitControls responsiveness | Camera responds to mouse drag/scroll | Smooth damping, no input lag |
+**Functional Completeness:**
+- ✅ Mandatory: Running `npm install && npm run dev` opens a browser window showing a rotating cube
+- ✅ Mandatory: Mouse drag rotates camera view around the cube (OrbitControls)
+- ✅ Mandatory: Window resize maintains full-viewport canvas without distortion
+- ✅ Mandatory: Cube rotates continuously on both X and Y axes without user input
+- ⚠️ Acceptable: Animation frame drops below 60fps on low-end hardware if WebGL renderer is functional
 
-### Code Quality
-| Criterion | Minimum Acceptable | Ideal |
-|-----------|-------------------|-------|
-| JavaScript line count | ≤ 100 lines in `src/main.js` | ≤ 80 lines with clear structure |
-| Dependency count | Exactly 2 (three + vite) | No additional dependencies |
-| Browser console errors | Zero errors on load | Zero errors or warnings |
-| CSS specificity | No `!important` flags | Minimal, semantic selectors |
+**Code Quality:**
+- ✅ Mandatory: `src/main.js` is under 100 lines (blank lines and comments excluded from count)
+- ✅ Mandatory: No ESLint errors with standard ES6+ rules
+- ✅ Mandatory: All imported Three.js modules are from the installed `three` package (no CDN links)
+- ⚠️ Acceptable: Inline comments are minimal — code readability through naming is preferred over documentation
 
-### Developer Experience
-| Criterion | Minimum Acceptable | Ideal |
-|-----------|-------------------|-------|
-| Setup time | `npm install && npm run dev` succeeds | Vite dev server starts in < 5 seconds |
-| Hot reload | Vite HMR works for JS changes | HMR preserves cube rotation state |
-| File structure clarity | All 4 files present and named correctly | File names match standard Vite conventions |
+**Visual Standards:**
+- ✅ Mandatory: Cube is centered in viewport on initial load
+- ✅ Mandatory: Lighting makes cube faces distinguishable (no pure silhouette)
+- ✅ Mandatory: Canvas has no white borders, margins, or padding
+- ⚠️ Acceptable: Cube material uses Three.js default parameters if they produce visible contrast
+- ❌ Unacceptable: Scene is empty, black screen with no visible geometry
 
-### Visual Fidelity
-| Criterion | Minimum Acceptable | Ideal |
-|-----------|-------------------|-------|
-| Lighting visibility | Cube faces show distinct shading | Shadows create depth perception |
-| Background color | Matches `0x1a1a2e` or similar dark tone | Contrast allows cube edges to be visible |
-| Cube appearance | Recognizable as 3D cube | Edges crisp, no aliasing artifacts |
+**Dependency Integrity:**
+- ✅ Mandatory: `package.json` specifies exact or caret ranges for `three` and `vite`
+- ✅ Mandatory: `npm install` completes without peer dependency warnings
+- ✅ Mandatory: Node.js version requirement documented in `package.json` engines field
+- ⚠️ Acceptable: Three.js version is not the absolute latest if a stable release from the last 3 months is used
+
+**Project Structure:**
+- ✅ Mandatory: Exactly 4 files in repository root or src: `index.html`, `package.json`, `src/main.js`, `src/style.css`
+- ✅ Mandatory: `index.html` loads `src/main.js` as ES module
+- ✅ Mandatory: `src/style.css` referenced in `index.html` with proper MIME type handling
+- ❌ Unacceptable: Additional configuration files beyond Vite defaults (`.eslintrc`, `tsconfig.json`, etc.)
 
 ## Trust Tier Assignment
 
 **Assigned Tier:** Tier 2 (Supervised)
 
-### Rationale
+**Rationale:**
 
-**Why Not Tier 1 (Autonomous):**
-- This is a greenfield project initialization with zero existing codebase structure to reference
-- The repository currently contains only ORBITAL metadata artifacts — no production code exists
-- File creation decisions (naming, placement) will establish patterns for future work
-- Incorrect Three.js API usage (e.g., wrong import paths, deprecated methods) could teach wrong patterns
+This orbit qualifies for Tier 2 due to moderate blast radius within a bounded greenfield context:
 
-**Why Not Tier 3 (Gated):**
-- No integration with external services, databases, or production systems
-- No security-sensitive operations (authentication, data validation, API keys)
-- No risk of data loss or corruption — this is net-new file creation
-- Failure mode is benign: a non-working demo that can be discarded and regenerated
+- **Low Architectural Risk:** No existing codebase to destabilize — this is a net-new project with no integration points
+- **Constrained Scope:** Hard limits on file count (<5 files) and line count (<100 lines) naturally bound the solution space
+- **Deterministic Requirements:** Acceptance criteria are objectively measurable (file count, line count, rendering behavior)
+- **Standard Technology Stack:** Vite and Three.js are industry-standard tools with well-known behavior patterns
 
-**Tier 2 Justification:**
-- Requires human verification that generated code follows Three.js best practices (current API patterns, proper disposal patterns for future memory management)
-- Human should confirm Vite configuration aligns with modern conventions (ES module setup, import paths)
-- Visual output requires subjective human judgment: "Does this look right?" is not automatable
-- Establishes foundational patterns that will influence subsequent orbits — worth a human checkpoint
+However, Tier 1 (Autonomous) is inappropriate because:
 
-### Supervision Checkpoints
-1. **Pre-execution:** Review file paths and package.json structure
-2. **Post-generation:** Run `npm run dev` and visually confirm scene renders correctly
-3. **Code review:** Verify Three.js imports use correct paths (not deprecated `three/build` pattern)
-4. **Performance check:** Confirm animation runs at stable 60fps in browser dev tools
+- **Visual Verification Required:** The "rotating cube with correct lighting" requirement cannot be validated through static code analysis alone — human visual inspection confirms the scene renders as intended
+- **Greenfield Unknowns:** Without an existing codebase to reference, the AI must make subjective decisions about camera positioning, rotation speed, and lighting intensity that affect user experience
+- **Dependency Version Selection:** Choosing compatible versions of Three.js and Vite requires understanding of ecosystem stability that may require human judgment
+
+Tier 3 (Gated) is excessive because:
+
+- **Isolated Blast Radius:** Failure cannot corrupt data, break production services, or affect other systems
+- **Reversible Changes:** All changes are git-committable file creations with no destructive operations
+- **Low Stakes:** This is a learning starter project, not a production application with user traffic
 
 ## Dependencies
 
-### External Dependencies
-- **Node.js:** Version ≥18.0.0 required for Vite compatibility (specified in package.json engines field)
-- **npm:** Package manager for dependency installation (or yarn/pnpm equivalents)
-- **Modern Browser:** Chrome/Firefox/Safari with WebGL 2.0 support for Three.js rendering
+**External Dependencies:**
+- Three.js library (latest stable version from npm registry)
+- Vite development server (v5.x or compatible)
+- Node.js runtime (≥18.0.0) with npm package manager
+- Modern browser with WebGL 1.0 support (Chrome 90+, Firefox 88+, Safari 15+, Edge 90+)
 
-### Three.js Ecosystem
-- **Core Library:** `three` package from npm, version ^0.160.0 or compatible
-- **OrbitControls:** Imported from Three.js examples directory (`three/examples/jsm/controls/OrbitControls.js`)
-- **WebGL Context:** Browser must provide WebGLRenderingContext (automatically handled by Three.js)
+**Prior Orbit Dependencies:**
+- None — this is an independent greenfield project with no trajectory history
 
-### Build Tooling
-- **Vite Dev Server:** Must support ES module hot reload and bare import resolution for `three`
-- **Module Resolution:** Vite must resolve `node_modules/three` imports without additional configuration
+**Environmental Requirements:**
+- Git repository initialized at project root (for version control of the 4 files)
+- Local filesystem write permissions for `npm install` to create `node_modules/`
+- Network access to npm registry for dependency installation
+- Available port 5173 (Vite default) or auto-assigned alternative for dev server
 
-### No Prior Orbit Dependencies
-- This is orbit #2 but does not depend on orbit #1 deliverables
-- Existing `.orbital/artifacts/*` files are metadata only — not code dependencies
-- Repository structure shows no prior working codebase to integrate with
-
-### Environmental Assumptions
-- Repository is cloned or initialized in a local filesystem with write permissions
-- Network access available for `npm install` to fetch packages from npmjs.com
-- No corporate proxy, firewall, or npm registry mirror configuration required
+**Assumed Knowledge:**
+- User has Node.js and npm already installed on their development machine
+- User understands how to run `npm install` and `npm run dev` in a terminal
+- User has a modern browser installed for viewing the dev server output
