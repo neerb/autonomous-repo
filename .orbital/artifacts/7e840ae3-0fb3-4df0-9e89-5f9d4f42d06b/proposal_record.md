@@ -89,19 +89,9 @@ canvas {
 
 **File: `/src/main.js`** (Complete Replacement)
 
-**Import section (7 lines, excluded from 100-line count per Intent):**
+**Import section (2 lines, excluded from 100-line count per Intent):**
 ```javascript
-import {
-  Scene,
-  PerspectiveCamera,
-  WebGLRenderer,
-  BoxGeometry,
-  MeshStandardMaterial,
-  Mesh,
-  AmbientLight,
-  DirectionalLight,
-  Color
-} from 'three';
+import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshStandardMaterial, Mesh, AmbientLight, DirectionalLight, Color } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 ```
 
@@ -176,11 +166,11 @@ window.addEventListener('resize', () => {
 ```
 
 **Line count breakdown:**
-- Imports: 7 lines (excluded)
+- Imports: 2 lines (excluded)
 - Blank lines for readability: ~8 (excluded)
 - Inline comments: ~10 lines (excluded)
 - Executable code: 35 + 8 + 7 = **50 lines**
-- Total file length: ~75 lines including comments/blanks
+- Total file length: ~70 lines including comments/blanks
 
 **Technical decisions:**
 
