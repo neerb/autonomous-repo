@@ -22,7 +22,15 @@ scene.add(directionalLight);
 const geometry = new THREE.BoxGeometry(2, 2, 2);
 const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
+cube.position.x = -1.5;
 scene.add(cube);
+
+// Diamond Geometry (Octahedron)
+const diamondGeometry = new THREE.OctahedronGeometry(1, 0);
+const diamondMaterial = new THREE.MeshStandardMaterial({ color: 0x00ffff });
+const diamond = new THREE.Mesh(diamondGeometry, diamondMaterial);
+diamond.position.x = 1.5;
+scene.add(diamond);
 
 // OrbitControls
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -34,6 +42,9 @@ function animate() {
   
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
+  
+  diamond.rotation.x += 0.01;
+  diamond.rotation.y += 0.01;
   
   renderer.render(scene, camera);
 }
