@@ -17,9 +17,16 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+const material = new THREE.MeshStandardMaterial({ color: 0x00aaff });
 const cube = new THREE.Mesh(geometry, material);
+cube.position.x = -2;
 scene.add(cube);
+
+const diamondGeometry = new THREE.OctahedronGeometry(0.8);
+const diamondMaterial = new THREE.MeshStandardMaterial({ color: 0xff6600 });
+const diamond = new THREE.Mesh(diamondGeometry, diamondMaterial);
+diamond.position.x = 2;
+scene.add(diamond);
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
@@ -34,6 +41,8 @@ function animate() {
   requestAnimationFrame(animate);
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
+  diamond.rotation.x += 0.01;
+  diamond.rotation.y += 0.01;
   controls.update();
   renderer.render(scene, camera);
 }
