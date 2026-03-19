@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-const ORBIT_RADIUS = 4, ORBIT_SPEED = 0.0003, MOUSE_INFLUENCE = 0.4;
-
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a2e);
 
@@ -18,19 +16,12 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-dirLight.position.set(5, 10, 7.5);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 1024;
-dirLight.shadow.mapSize.height = 1024;
-dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 50;
-dirLight.shadow.camera.left = -15;
-dirLight.shadow.camera.right = 15;
-dirLight.shadow.camera.top = 15;
-dirLight.shadow.camera.bottom = -15;
-dirLight.shadow.bias = -0.0005;
-scene.add(dirLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+directionalLight.position.set(5, 10, 7.5);
+directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.width = 1024;
+directionalLight.shadow.mapSize.height = 1024;
+scene.add(directionalLight);
 
 const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x4fc3f7 });
@@ -48,13 +39,16 @@ scene.add(diamond);
 const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
 const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x9c27b0 });
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.position.set(ORBIT_RADIUS, 0, 0);
 sphere.castShadow = true;
 scene.add(sphere);
 
-const planeGeometry = new THREE.PlaneGeometry(30, 30);
-const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x0a0a0f, roughness: 0.9, metalness: 0.1 });
-const groundPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+const groundGeometry = new THREE.PlaneGeometry(30, 30);
+const groundMaterial = new THREE.MeshStandardMaterial({
+  color: 0x0a0a0f,
+  roughness: 0.8,
+  metalness: 0.2
+});
+const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
 groundPlane.rotation.x = -Math.PI / 2;
 groundPlane.position.y = -3;
 groundPlane.receiveShadow = true;
@@ -63,10 +57,14 @@ scene.add(groundPlane);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
+const clock = new THREE.Clock();
+
 let mouseX = 0, mouseY = 0;
-window.addEventListener('mousemove', (e) => {
-  mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+window.addEventListener('mousemove', (event) => {
+  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+  directionalLight.position.x = 5 + mouseX * 3;
+  directionalLight.position.z = 7.5 + mouseY * 3;
 });
 
 window.addEventListener('resize', () => {
@@ -75,23 +73,19 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-function animate(time = 0) {
+function animate() {
   requestAnimationFrame(animate);
-
+  const elapsed = clock.getElapsedTime();
+  
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
-
-  diamond.rotation.y += 0.005;
-  diamond.rotation.z += 0.003;
-
-  const t = time * ORBIT_SPEED;
-  sphere.position.x = Math.cos(t) * ORBIT_RADIUS;
-  sphere.position.z = Math.sin(t) * ORBIT_RADIUS;
-
-  dirLight.position.x = 5 + mouseX * MOUSE_INFLUENCE * 3;
-  dirLight.position.z = 7.5 + mouseY * MOUSE_INFLUENCE * 3;
-  dirLight.intensity = 1.0 + mouseY * 0.2;
-
+  
+  diamond.rotation.z += 0.008;
+  diamond.rotation.x += 0.012;
+  
+  sphere.position.x = Math.cos(elapsed * 0.6) * 2;
+  sphere.position.z = Math.sin(elapsed * 0.6) * 2;
+  
   controls.update();
   renderer.render(scene, camera);
 }
