@@ -1,247 +1,454 @@
-# Context Package: Three.js Starter Project
+# Context Package: Three.js Starter with Cube and Diamond Shapes
 
 ## Codebase References
-
-### Files to Create
-
-| File Path | Purpose | Current State |
-|-----------|---------|---------------|
-| `index.html` | HTML entry point that loads the Vite dev server and mounts the canvas | Does not exist |
-| `src/main.js` | Three.js scene initialization, animation loop, and event handlers | Does not exist |
-| `src/style.css` | CSS reset and full-viewport canvas styling | Does not exist |
 
 ### Files to Modify
 
 | File Path | Purpose | Current State | Required Changes |
 |-----------|---------|---------------|------------------|
-| `package.json` | Dependency and script definitions | Exists with correct structure | Already correct — verify `"type": "module"`, `dev` script, and dependency versions match Intent constraints |
-| `README.md` | Project documentation | Exists with correct content | Already correct — no changes needed |
+| `src/main.js` | Three.js scene initialization, animation loop, and event handlers | **Exists and functional** from prior orbit — contains single cube implementation | Add second geometry (octahedron), position both shapes horizontally, update animation loop to rotate both meshes |
 
-### Repository Structure Analysis
+### Files to Preserve (No Changes)
 
-The repository currently contains:
-- Root-level `package.json` with Three.js 0.160.0 and Vite 5.0.0 already configured
-- Root-level `README.md` with correct documentation
-- Root-level `index.html` placeholder
-- `src/` directory with `main.js` and `style.css` placeholders
-- `.orbital/artifacts/` directory containing previous orbit documentation (not relevant to this greenfield implementation)
+| File Path | Purpose | Current State | Rationale |
+|-----------|---------|---------------|-----------|
+| `index.html` | HTML entry point with Vite module loader | Functional from prior orbit | No HTML changes needed — canvas is created by Three.js renderer |
+| `src/style.css` | CSS reset and full-viewport canvas styling | Functional from prior orbit | Viewport styling already correct — no layout changes needed for multiple shapes |
+| `package.json` | Dependency and script definitions | Functional from prior orbit with Three.js 0.160.0 and Vite 5.0.0 | Dependencies already include all required geometries — `OctahedronGeometry` is part of Three.js core |
+| `README.md` | Project documentation | Functional from prior orbit | Documentation describes "rotating cube" but this is acceptable — updating README is out of scope for this orbit |
 
-**Critical Observation:** The file structure already exists but files contain placeholder or incomplete content. This orbit must populate these files with functional code that meets the Intent Document's 100-line constraint and visual requirements.
+### Current Implementation Analysis
+
+**Based on prior orbit's Proposal Record, `src/main.js` contains:**
+
+1. **Imports (3 lines):**
+   ```javascript
+   import * as THREE from 'three'
+   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+   ```
+
+2. **Scene infrastructure (15 lines):**
+   - Scene instantiation
+   - PerspectiveCamera with FOV 75, aspect ratio from window dimensions, positioned at Z=5
+   - WebGLRenderer with antialiasing, pixel ratio matching device, clear color `0x1a1a2e`
+   - Renderer canvas appended to `document.body`
+
+3. **Lighting (5 lines):**
+   - AmbientLight at 0.5 intensity
+   - DirectionalLight at 0.8 intensity positioned at (5, 5, 5)
+
+4. **Single cube geometry (4 lines):**
+   ```javascript
+   const geometry = new THREE.BoxGeometry(1, 1, 1)
+   const material = new THREE.MeshStandardMaterial({ color: 0x00aaff })
+   const cube = new THREE.Mesh(geometry, material)
+   scene.add(cube)
+   ```
+   **Critical observation:** Cube is currently at default position (0, 0, 0)
+
+5. **OrbitControls (3 lines):**
+   - Instantiated with camera and renderer DOM element
+   - Damping enabled with factor 0.05
+
+6. **Resize handler (6 lines):**
+   - Updates camera aspect ratio and projection matrix
+   - Updates renderer size to match window dimensions
+
+7. **Animation loop (7 lines):**
+   ```javascript
+   function animate() {
+     requestAnimationFrame(animate)
+     
+     cube.rotation.x += 0.01
+     cube.rotation.y += 0.01
+     
+     controls.update()
+     renderer.render(scene, camera)
+   }
+   animate()
+   ```
+
+**Total current line count:** 37 lines (excluding blank lines)
+
+### Modification Surface
+
+**Lines to add (estimated 10-12 lines):**
+
+1. **Reposition existing cube (1 line):**
+   ```javascript
+   cube.position.x = -2
+   ```
+
+2. **Create diamond geometry (4 lines):**
+   ```javascript
+   const diamondGeometry = new THREE.OctahedronGeometry(0.8)
+   const diamondMaterial = new THREE.MeshStandardMaterial({ color: 0xff6600 })
+   const diamond = new THREE.Mesh(diamondGeometry, diamondMaterial)
+   diamond.position.x = 2
+   scene.add(diamond)
+   ```
+
+3. **Update animation loop (2 lines):**
+   ```javascript
+   diamond.rotation.x += 0.01
+   diamond.rotation.y += 0.01
+   ```
+
+**Potential camera adjustment (1 line if needed):**
+```javascript
+camera.position.z = 6  // Increase from 5 to 6 if framing is too tight
+```
+
+**Projected total line count:** 37 + 10 = 47 lines (well under 100-line constraint)
 
 ## Architecture Context
 
 ### System Architecture
 
-This is a **client-side only** application with no backend services, API integrations, or data persistence. The architecture consists of:
+This orbit extends the **single-scene, client-side-only** architecture established in the prior orbit. No changes to the overall system structure:
 
 ```
 Browser Environment
-├── index.html (entry point)
+├── index.html (unchanged)
 │   └── <script type="module" src="/src/main.js">
 │
-├── Vite Dev Server (localhost:5173)
+├── Vite Dev Server (unchanged)
 │   ├── ES Module transformation
 │   ├── Hot Module Replacement (HMR)
 │   └── Static file serving
 │
-└── Three.js Runtime
-    ├── WebGLRenderer (canvas output)
-    ├── Scene (container for 3D objects)
-    ├── PerspectiveCamera (viewpoint)
-    ├── Geometry + Material → Mesh
-    ├── Lighting (Ambient + Directional)
-    └── OrbitControls (user input handler)
+└── Three.js Runtime (extended)
+    ├── WebGLRenderer (unchanged)
+    ├── Scene (unchanged container)
+    ├── PerspectiveCamera (potentially adjusted Z position)
+    ├── Two Meshes (NEW: cube + diamond instead of single cube)
+    │   ├── Cube: BoxGeometry + MeshStandardMaterial
+    │   └── Diamond: OctahedronGeometry + MeshStandardMaterial
+    ├── Lighting (unchanged — ambient + directional)
+    └── OrbitControls (unchanged)
 ```
 
-### Data Flow
+### Data Flow Changes
 
-1. **Initialization Sequence:**
-   - Browser loads `index.html`
-   - Vite injects module loader and resolves `src/main.js`
-   - `main.js` imports Three.js core and OrbitControls from `node_modules/three`
-   - Scene, camera, renderer, lights, and geometry are instantiated
-   - Renderer appends `<canvas>` element to DOM
-   - OrbitControls binds mouse event listeners to canvas
+**Original flow (prior orbit):**
+```
+Animation Loop:
+  1. requestAnimationFrame schedules next frame
+  2. cube.rotation.x += 0.01
+  3. cube.rotation.y += 0.01
+  4. controls.update() (if user input detected)
+  5. renderer.render(scene, camera)
+```
 
-2. **Render Loop:**
-   - `requestAnimationFrame` schedules next frame at 60fps
-   - Cube rotation values increment by 0.01 radians on X and Y axes
-   - OrbitControls updates camera matrix if user input detected
-   - Renderer draws scene from camera perspective to canvas
-   - Loop repeats indefinitely
+**Modified flow (this orbit):**
+```
+Animation Loop:
+  1. requestAnimationFrame schedules next frame
+  2. cube.rotation.x += 0.01        // Existing
+  3. cube.rotation.y += 0.01        // Existing
+  4. diamond.rotation.x += 0.01     // NEW
+  5. diamond.rotation.y += 0.01     // NEW
+  6. controls.update()               // Unchanged
+  7. renderer.render(scene, camera)  // Unchanged — renders both meshes automatically
+```
 
-3. **Resize Handling:**
-   - Window `resize` event listener triggers callback
-   - Camera aspect ratio recalculated from `window.innerWidth / innerHeight`
-   - Camera projection matrix updated via `camera.updateProjectionMatrix()`
-   - Renderer size updated via `renderer.setSize(window.innerWidth, window.innerHeight)`
+**Critical architectural insight:** Three.js scene graph automatically renders all children added via `scene.add()`. No modifications to `renderer.render()` are required when adding a second mesh. The renderer traverses the scene graph and draws all visible meshes in a single pass.
 
-### Infrastructure Constraints
+### Positioning Strategy
 
-- **No build output:** Development mode only — no `dist/` folder, no production bundles
-- **Single HTML file:** No routing, no multi-page architecture
-- **No state management:** All state lives in Three.js objects (mesh rotation, camera position)
-- **No environment variables:** Configuration is hardcoded (canvas background color, camera FOV, cube size)
-- **ES Module imports only:** No CommonJS `require()`, no UMD bundles
+**Horizontal layout on X-axis:**
+```
+          Y (up)
+          |
+          |
+  -2 -----+-----> +2  X (right)
+  Cube    |     Diamond
+          |
+          Z (toward camera at +5 or +6)
+```
+
+**Camera framing calculation:**
+- Original camera at Z=5 with FOV 75° can see approximately 6 units horizontally at Z=0
+- Visible horizontal range: `-3` to `+3` at Z=0
+- Cube at x=-2 and diamond at x=2 are both within this range
+- **Verdict:** Camera Z=5 is sufficient, but Z=6 provides more comfortable margin
+
+**Camera frustum validation:**
+- Near plane: 0.1
+- Far plane: 1000
+- Both shapes at Z=0, camera at Z=5 → distance = 5 units (well within near/far bounds)
+- FOV 75° with aspect ratio 16:9 → visible height at Z=0 ≈ 4.3 units
+- Cube height = 1, diamond height ≈ 1.6 (octahedron with radius 0.8) → both fit vertically
+
+### Performance Impact Analysis
+
+**Prior orbit triangle count:**
+- Cube: 12 triangles (2 triangles × 6 faces)
+- Total: 12 triangles
+
+**This orbit triangle count:**
+- Cube: 12 triangles
+- Octahedron (detail level 0): 8 triangles (1 triangle × 8 faces)
+- Total: 20 triangles
+
+**Performance delta:** +8 triangles (+67% increase)
+
+**Frame time impact estimation:**
+- Target hardware: 2020+ laptop with Intel Iris Xe (~80 GFLOPS)
+- Simple scene with 2 lights, no shadows, no post-processing
+- Expected frame time at 20 triangles: <1ms (well under 16.67ms budget for 60fps)
+- **Verdict:** No measurable performance impact expected
 
 ### Integration Points
 
-This project has **zero external integrations**:
+**No new integration points.** This orbit maintains the zero-dependency, client-side-only architecture:
 - No REST APIs
 - No WebSockets
-- No localStorage or IndexedDB
-- No analytics or telemetry
+- No localStorage
+- No external texture assets
 - No CDN dependencies (Three.js served from `node_modules`)
 
 ## Pattern Library
 
-### Import Patterns
+### Established Patterns (From Prior Orbit)
 
-**Approved:**
+**Import pattern:**
 ```javascript
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 ```
+- Three.js core uses namespace import (`THREE.*`)
+- OrbitControls uses named import from `examples/jsm/` path with `.js` extension
 
-**Rationale:** Three.js r160+ uses ES modules. The `OrbitControls` class is not part of the core bundle and must be imported from the examples directory. The `.js` extension is required for Vite to resolve the module correctly.
+**Naming conventions:**
+| Entity Type | Convention | Example from Prior Orbit |
+|-------------|------------|--------------------------|
+| Scene | `scene` | `const scene = new THREE.Scene()` |
+| Camera | `camera` | `const camera = new THREE.PerspectiveCamera(...)` |
+| Renderer | `renderer` | `const renderer = new THREE.WebGLRenderer(...)` |
+| Geometry | `geometry` suffix | `const geometry = new THREE.BoxGeometry(...)` |
+| Material | `material` suffix | `const material = new THREE.MeshStandardMaterial(...)` |
+| Mesh | Descriptive noun | `const cube = new THREE.Mesh(...)` |
+| Lights | Type + descriptive | `const ambientLight`, `const directionalLight` |
+| Controls | `controls` | `const controls = new OrbitControls(...)` |
 
-**Not Approved:**
-```javascript
-// ❌ No default import — Three.js exports named namespace
-import THREE from 'three';
-
-// ❌ No addons path — use examples/jsm
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-```
-
-### Initialization Patterns
-
-**Scene Setup Order:**
-1. Scene instantiation (`new THREE.Scene()`)
-2. Camera instantiation with FOV, aspect ratio, near/far planes
-3. Renderer instantiation with `antialias: true` and `setClearColor()`
-4. Renderer canvas appended to `document.body`
+**Scene setup order (established in prior orbit):**
+1. Scene instantiation
+2. Camera instantiation and positioning
+3. Renderer instantiation and configuration
+4. Renderer canvas append to DOM
 5. Lights added to scene
-6. Geometry and material combined into mesh, added to scene
-7. OrbitControls instantiated with camera and renderer DOM element
-8. Resize listener attached to `window`
-9. Animation loop initiated with `requestAnimationFrame`
+6. Geometry and material creation
+7. Mesh creation and scene addition
+8. OrbitControls instantiation
+9. Resize listener attachment
+10. Animation loop initiation
 
-**Rationale:** This order ensures the renderer's DOM element exists before OrbitControls tries to bind event listeners. Camera must exist before OrbitControls constructor is called.
+### New Patterns Required for Multi-Mesh Scenes
 
-### Naming Conventions
+**Mesh naming for distinction:**
+```javascript
+// Prior orbit (single mesh):
+const cube = new THREE.Mesh(geometry, material)
 
-| Entity Type | Convention | Example |
-|-------------|------------|---------|
-| Scene object | `scene` | `const scene = new THREE.Scene();` |
-| Camera | `camera` | `const camera = new THREE.PerspectiveCamera(...);` |
-| Renderer | `renderer` | `const renderer = new THREE.WebGLRenderer(...);` |
-| Mesh | Descriptive noun | `const cube = new THREE.Mesh(...);` |
-| Lights | Type + purpose | `const ambientLight = new THREE.AmbientLight(...);` |
-| Controls | `controls` | `const controls = new OrbitControls(...);` |
-| Animation function | `animate` | `function animate() { ... }` |
+// This orbit (multiple meshes — must distinguish):
+const cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+const diamond = new THREE.Mesh(diamondGeometry, diamondMaterial)
+```
 
-### Code Style Standards
+**Geometry/material naming when multiple exist:**
+- Option 1 (verbose): `cubeGeometry`, `cubeMaterial`, `diamondGeometry`, `diamondMaterial`
+- Option 2 (inline): Create geometry and material directly in `Mesh()` constructor
+- **Recommended:** Option 2 for line count efficiency, but use descriptive mesh variable names
 
-- **No semicolons** — The existing `package.json` does not include ESLint, so follow JavaScript automatic semicolon insertion (ASI) conventions
-- **Single quotes for strings** — Consistent with Vite defaults
-- **Const by default** — Use `const` unless reassignment is required
-- **Arrow functions for callbacks** — `window.addEventListener('resize', () => { ... })`
-- **Explicit return in one-liners** — Avoid implicit returns for clarity in animation loops
+**Example inline pattern:**
+```javascript
+const cube = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshStandardMaterial({ color: 0x00aaff })
+)
+cube.position.x = -2
+scene.add(cube)
 
-### CSS Reset Pattern
+const diamond = new THREE.Mesh(
+  new THREE.OctahedronGeometry(0.8),
+  new THREE.MeshStandardMaterial({ color: 0xff6600 })
+)
+diamond.position.x = 2
+scene.add(diamond)
+```
 
-The `src/style.css` file must eliminate default browser margins and ensure the canvas fills the viewport:
-
-```css
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  overflow: hidden;
-}
-
-canvas {
-  display: block;
+**Animation loop pattern for multiple objects:**
+```javascript
+function animate() {
+  requestAnimationFrame(animate)
+  
+  // Rotate all objects with same increment
+  cube.rotation.x += 0.01
+  cube.rotation.y += 0.01
+  diamond.rotation.x += 0.01
+  diamond.rotation.y += 0.01
+  
+  controls.update()
+  renderer.render(scene, camera)
 }
 ```
 
-**Rationale:**
-- `margin: 0; padding: 0;` eliminates default 8px body margin in most browsers
-- `overflow: hidden;` prevents scrollbars from appearing during resize flicker
-- `canvas { display: block; }` removes 3-4px whitespace below inline canvas elements
+**Anti-pattern to avoid:**
+```javascript
+// ❌ DO NOT create separate animation loops
+function animateCube() {
+  cube.rotation.x += 0.01
+  requestAnimationFrame(animateCube)
+}
+
+function animateDiamond() {
+  diamond.rotation.x += 0.01
+  requestAnimationFrame(animateDiamond)
+}
+```
+**Rationale:** Multiple `requestAnimationFrame` loops cause redundant render calls and frame rate synchronization issues.
+
+### Color Selection Pattern
+
+**Prior orbit:**
+- Cube color: `0x00aaff` (cyan)
+- Background: `0x1a1a2e` (dark blue-gray)
+
+**This orbit (Intent guidance):**
+- Cube color: `0x00aaff` (cyan) — unchanged
+- Diamond color: `0xff6600` (orange) — high contrast with cyan and dark background
+- Background: `0x1a1a2e` — unchanged
+
+**Color contrast validation:**
+- Cyan (`#00aaff`) vs Orange (`#ff6600`): Complementary on color wheel (180° hue shift)
+- Cyan vs Dark background (`#1a1a2e`): High luminance contrast (bright vs dark)
+- Orange vs Dark background: High luminance contrast (bright vs dark)
+- **Verdict:** Excellent visual distinction
+
+### Code Style Standards (From Prior Orbit)
+
+- **No semicolons** — ASI (automatic semicolon insertion) conventions
+- **Single quotes for strings** — Vite defaults
+- **Const by default** — Use `const` unless reassignment required
+- **Arrow functions for callbacks** — `window.addEventListener('resize', () => { ... })`
+- **Inline object instantiation** — Prefer `new THREE.Mesh(new THREE.BoxGeometry(...), ...)` over separate variable declarations when under line count pressure
 
 ## Prior Orbit References
 
-### Orbit Analysis
+### Orbit 1: Three.js Starter (Single Cube)
 
-The repository contains artifact directories for previous orbits, but **none are relevant to this greenfield Three.js implementation**. The `.orbital/artifacts/` directories contain context packages, intent documents, and proposal records for unrelated work.
+**Artifacts:** 
+- Intent Document: `.orbital/artifacts/6099821b-a2a2-472a-bf8f-b997405e75e1/intent_document.md`
+- Context Package: `.orbital/artifacts/6099821b-a2a2-472a-bf8f-b997405e75e1/context_package.md`
+- Proposal Record: `.orbital/artifacts/6099821b-a2a2-472a-bf8f-b997405e75e1/proposal_record.md`
 
-**Key Finding:** No prior Three.js code exists in this repository. There is no existing scene setup, no established Three.js patterns, and no legacy code to refactor or integrate with.
+**Key outcomes:**
+- Established file structure: `index.html`, `src/main.js`, `src/style.css`, `package.json`
+- Implemented scene with single rotating cube at origin (0, 0, 0)
+- Camera positioned at Z=5 with FOV 75°
+- Lighting: AmbientLight (0.5 intensity) + DirectionalLight (0.8 intensity at 5,5,5)
+- OrbitControls with damping enabled (factor 0.05)
+- Total JavaScript: 37 lines (63 lines under 100-line budget)
 
-### Lessons from Repository History
+**What worked:**
+- Camera framing at Z=5 provides good view of 1x1x1 cube at origin
+- Rotation speed of 0.01 radians/frame is visually pleasing
+- Two-light setup (ambient + directional) creates visible depth without shadows
+- OrbitControls damping feels responsive with 0.05 factor
+- Vite HMR provides instant feedback on code changes
 
-1. **File structure is already established:** The `package.json`, `README.md`, and `src/` directory structure already exist. The orbit must populate these files, not create the directory structure from scratch.
+**What didn't work / wasn't tested:**
+- No multi-mesh scenarios — only single cube tested
+- No objects positioned off-center — cube at origin only
+- No camera framing validation for wider horizontal scenes
+- No performance profiling with multiple geometries
 
-2. **Dependency versions are pre-selected:** The `package.json` already specifies `three@^0.160.0` and `vite@^5.0.0`. The implementation must work with these exact versions, not upgrade or modify them.
+**Lessons learned:**
+1. **100-line constraint is manageable for simple scenes** — 37 lines leaves room for additional features
+2. **MeshStandardMaterial requires lighting** — Using AmbientLight alone would make cube appear flat
+3. **OrbitControls must call `update()` in animation loop when damping enabled** — Omitting this causes camera to jump instead of smoothly decelerating
+4. **Pixel ratio must match device** — `setPixelRatio(window.devicePixelRatio)` prevents blurry rendering on Retina displays
 
-3. **Documentation expectations:** The existing `README.md` sets a precedent for concise, example-driven documentation with a Quick Start section and explicit browser requirements. Any additions should match this tone.
+### Relevant Patterns from Prior Orbit
 
-### Anti-Patterns to Avoid
+**Camera positioning formula (from prior orbit's Proposal Record):**
+```
+distance = (objectSize / 2) / tan(FOV / 2)
+```
+For 1x1x1 cube with FOV 75°:
+```
+minimum_distance = (0.5) / tan(37.5°) ≈ 0.65
+comfortable_distance = 5 (used in prior orbit)
+```
 
-Based on the repository structure and Intent constraints:
+**For two objects at x=-2 and x=2 (4 units horizontal span):**
+```
+minimum_distance = (4 / 2) / tan(37.5°) ≈ 2.6
+comfortable_distance = 5 to 6 (provides margin)
+```
 
-- **Do not create a `vite.config.js` file** — The Intent explicitly prohibits additional configuration files
-- **Do not add TypeScript or JSX support** — The constraint is vanilla JavaScript only
-- **Do not create subdirectories under `src/`** — The structure must remain flat with only `main.js` and `style.css`
-- **Do not add npm scripts beyond `dev`** — No `build`, `preview`, or `test` scripts are required for this starter project
+**Verdict:** Camera Z=5 from prior orbit is mathematically sufficient but Z=6 provides better framing.
 
 ## Risk Assessment
 
-### Technical Risks
+### Implementation Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **OrbitControls import path incorrect** | Medium | High — Controls will not initialize, camera will be static | Verify exact path `three/examples/jsm/controls/OrbitControls.js` with `.js` extension. Test import resolution before full implementation. |
-| **Canvas does not fill viewport** | Low | Medium — White margins visible, fails visual acceptance | Use CSS reset with `margin: 0; padding: 0; overflow: hidden;` and `canvas { display: block; }`. Set renderer size to `window.innerWidth, window.innerHeight` in both initialization and resize handler. |
-| **Animation frame rate below 60fps** | Low | Medium — Fails performance acceptance | Use lightweight geometry (`BoxGeometry(1, 1, 1)`) and minimal lights (2 total). Avoid shadows, post-processing, or complex materials. Profile with Chrome DevTools Performance tab. |
-| **Window resize causes aspect ratio distortion** | Medium | High — Cube appears stretched, camera frustum incorrect | Recalculate `camera.aspect = window.innerWidth / window.innerHeight` and call `camera.updateProjectionMatrix()` in resize handler. Update renderer size simultaneously. |
-| **WebGL context loss on low-end hardware** | Low | High — Black screen, no error recovery | Three.js handles context loss internally. Ensure renderer is instantiated with `{ antialias: true }` to enable WebGL 2.0 fallback. Document browser requirements (WebGL 2.0 support) in README. |
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| **Camera framing too tight** | Medium | Medium — Shapes appear cramped or partially off-screen | Calculate visible horizontal range at Z=5: FOV 75° sees ~6 units at Z=0. Shapes at x=-2 and x=2 fit within -3 to +3 range. If framing feels tight during review, increase camera Z to 6. |
+| **Shapes positioned too close** | Low | Medium — Visual overlap makes distinction difficult | X-axis separation of 4 units (x=-2 to x=2) with 1x1x1 cube and 0.8 radius octahedron prevents overlap. Minimum safe separation: 1 + 0.8 = 1.8 units. Actual separation: 4 units (2.2x safety margin). |
+| **Animation loop updates only one shape** | Medium | High — One shape static, fails acceptance criteria | Add diamond rotation updates immediately after cube rotation updates in animation loop. Group rotation logic: `cube.rotation.x += 0.01; cube.rotation.y += 0.01; diamond.rotation.x += 0.01; diamond.rotation.y += 0.01;` |
+| **OctahedronGeometry import fails** | Very Low | High — Diamond does not render | `OctahedronGeometry` is part of Three.js core namespace (accessible via `THREE.OctahedronGeometry`). No additional imports required beyond `import * as THREE from 'three'`. Verify in r160 documentation: confirmed. |
+| **Diamond appears stretched or squashed** | Low | Medium — Fails visual acceptance | `OctahedronGeometry(radius)` creates symmetrical octahedron with uniform edge lengths. Ensure no non-uniform scaling applied. Use `diamond.position.x = 2` (not `diamond.scale.x`). |
 
 ### Code Quality Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **Exceeding 100-line constraint** | Medium | High — Fails Intent acceptance criteria | Count lines excluding comments and blank lines. Use concise variable names (`scene`, `camera`, `renderer`). Inline geometry and material instantiation. Combine related operations (e.g., `renderer.setSize()` and `renderer.setPixelRatio()` on consecutive lines). |
-| **Unreadable code due to brevity** | Medium | Medium — Violates "Code is self-documenting" ideal acceptance | Use descriptive variable names even if verbose (`directionalLight` vs `light2`). Add whitespace to separate logical blocks (initialization, lighting, geometry, animation loop). Include 2-3 strategic comments for non-obvious operations (e.g., why camera is positioned at Z=5). |
-| **Missing error handling** | Low | Low — Dev experience suffers but functionality intact | Vite provides clear console errors for import failures. Three.js logs WebGL warnings to console. No custom error handling needed for MVP. |
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| **Exceeding 100-line constraint** | Low | High — Fails Intent constraint | Current implementation: 37 lines. Adding diamond: +10 lines (geometry, material, mesh, position, scene.add, 2 rotation lines). New total: 47 lines. Remaining budget: 53 lines. Safe margin: 53 lines / 100 lines = 53%. |
+| **Variable name collisions** | Very Low | Low — JavaScript scope prevents issues | New variables: `diamond`, `diamondGeometry`, `diamondMaterial` (or inline). No collision with existing: `cube`, `geometry`, `material`, `scene`, `camera`, `renderer`, `controls`. |
+| **Duplicate code for mesh creation** | Medium | Medium — Violates DRY principle but acceptable | Creating helper function `createMesh(geometry, material, position)` would reduce duplication but adds 5-7 lines. With current line budget (53 lines remaining), duplication is acceptable. If line count approaches 90, consider helper function. |
+| **Unclear code organization** | Medium | Low — Readability suffers but functionality intact | Group shape creation together: cube definition (4 lines) followed immediately by diamond definition (4 lines). Separate with blank line for visual grouping. Add 1-line comment: `// Create cube and diamond geometries` |
 
-### Integration Risks
+### Visual Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **Node.js version incompatibility** | Low | High — `npm install` fails | `package.json` already specifies `"engines": { "node": ">=18.0.0" }`. Vite 5.x requires Node 18+. No additional version checks needed. |
-| **Three.js version mismatch** | Low | Medium — OrbitControls API changes between versions | Pin to exact version `0.160.0` (already done). Do not use `^0.160.0` range if API stability is critical. Verify OrbitControls constructor signature: `new OrbitControls(camera, renderer.domElement)`. |
-| **Port 5173 already in use** | Low | Low — Dev server fails to start | Vite automatically tries next available port. Document expected URL `http://localhost:5173` but note alternative ports may be used. |
-
-### Security Risks
-
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **Malicious npm package substitution** | Very Low | High — Supply chain attack | Use `package-lock.json` to lock dependency versions. Verify Three.js package integrity with npm audit. No user input or external data sources exist in this project, eliminating XSS/injection vectors. |
-| **Prototype pollution via dependencies** | Very Low | Medium — Runtime exploits | Three.js and Vite are widely used, actively maintained packages. No known prototype pollution vulnerabilities in specified versions. Run `npm audit` as part of verification protocol. |
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| **Color distinction insufficient** | Low | Medium — Shapes hard to distinguish | Cyan (`0x00aaff`) vs Orange (`0xff6600`) are complementary colors with high contrast. If reviewer finds colors too similar, alternatives: Cyan + Magenta (`0xff00ff`), Cyan + Yellow (`0xffff00`). Avoid: Cyan + Blue (low contrast). |
+| **Lighting favors one shape over another** | Low | Low — Unequal visual prominence | Directional light at (5, 5, 5) is equidistant from both shapes (cube at x=-2, diamond at x=2). Both shapes receive equal illumination. Ambient light provides uniform base lighting. No shadowing enabled, so no occlusion. |
+| **Background too dark to see shapes** | Very Low | Medium — Shapes barely visible | Background `0x1a1a2e` worked well in prior orbit with cyan cube. Both cyan and orange have high luminance against dark background. Prior orbit validation confirmed visibility. |
+| **Diamond radius too small** | Low | Medium — Diamond appears insignificant next to cube | Octahedron radius 0.8 vs cube size 1.0 → Diamond bounding sphere diameter ≈ 1.6, cube diagonal ≈ 1.73. Visually similar sizes. If diamond appears too small, increase radius to 0.9 (requires 1-character change). |
 
 ### Performance Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **High-DPI displays cause pixel ratio issues** | Medium | Low — Canvas appears blurry on Retina displays | Call `renderer.setPixelRatio(window.devicePixelRatio)` during initialization. This doubles pixel resolution on 2x displays but maintains 60fps on target hardware (2020+ laptops have sufficient GPU power). |
-| **Memory leak from animation loop** | Very Low | High — Browser tab becomes unresponsive over time | Use `requestAnimationFrame` (not `setInterval`). Browser automatically pauses loop when tab is inactive. No manual cleanup needed for this single-page, single-scene application. |
-| **OrbitControls damping causes frame drops** | Low | Medium — Camera movement feels laggy | Enable damping with `controls.enableDamping = true` and `controls.dampingFactor = 0.05`. Call `controls.update()` in animation loop. Test on target hardware (2020+ laptop) to verify 60fps maintained during interaction. |
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| **Frame rate drops below 60fps** | Very Low | Medium — Fails performance acceptance | Triangle count increases from 12 to 20 (+67%). Target hardware (Intel Iris Xe) can render 100k+ triangles at 60fps. Actual count: 20 triangles (0.02% of capacity). Safety margin: 5,000x. No measurable impact expected. |
+| **Memory leak from multiple meshes** | Very Low | Low — Unlikely with modern Three.js | Three.js r160 uses efficient scene graph. Each mesh references shared geometry and material (if reused) or individual instances (if unique). Total memory: ~2KB per mesh. Two meshes = 4KB (negligible). No manual cleanup required. |
+| **Render time doubles with two meshes** | Very Low | Low — Linear scaling with minimal base | Render time for single cube at 37 lines: <1ms per frame (confirmed in prior orbit). Adding second mesh increases render time linearly: ~0.5ms per mesh. New total: <2ms (well under 16.67ms budget for 60fps). |
 
-### Deployment Risks
+### Camera Framing Risks
 
-**Not Applicable:** The Intent explicitly lists "Production builds or deployment configuration" as a non-goal. This project runs in development mode only via `npm run dev`. No build, minification, or hosting considerations are required.
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| **Shapes partially off-screen** | Medium | High — Fails visual acceptance | Validate visible horizontal range: Camera at Z=5, FOV 75°, aspect ratio 16:9. Horizontal visible range at Z=0: tan(37.5°) × 5 × 2 × (16/9) ≈ 6.8 units. Range: -3.4 to +3.4. Shapes at x=-2 and x=2 fit comfortably (1.4 unit margin on each side). |
+| **Shapes too small in viewport** | Low | Medium — Poor visual presentation | Increase camera Z from 5 to 6 if shapes appear too large. Decrease to 4.5 if shapes appear too small. Prior orbit established Z=5 as comfortable for single cube at origin. Horizontal spread of 4 units may benefit from Z=6. |
+| **OrbitControls pivot point incorrect** | Low | Medium — Camera orbits around wrong point | OrbitControls defaults to pivoting around scene origin (0, 0, 0). With cube at x=-2 and diamond at x=2, origin is midpoint between shapes (correct pivot). No `controls.target` adjustment needed. |
+
+### Scope Creep Risks
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| **Reviewer requests different shapes** | Low | Medium — Cone, sphere, etc. outside Intent scope | Intent specifies "diamond (octahedron)" explicitly. If reviewer requests alternative, reference Intent Document Geometric Requirements: "Diamond: OctahedronGeometry with radius 0.8". ConeGeometry mentioned as acceptable alternative but octahedron is primary. |
+| **Reviewer requests different rotation speeds** | Medium | Medium — Complicates animation loop | Intent specifies "Both shapes rotate at the same rate: 0.01 radians per frame on X and Y axes". If reviewer requests independent speeds, reference Non-Goals: "Animating shapes with different rotation speeds or directions". Propose separate orbit for advanced animation. |
+| **Reviewer requests more than two shapes** | Low | Medium — Line count pressure increases | Intent explicitly limits to two shapes: "Adding more than two shapes (this is a minimal demonstration)" listed under Non-Goals. If reviewer requests third shape, propose separate orbit with revised line count budget. |
+
+### Regression Risks
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| **Breaking existing cube functionality** | Low | High — Cube no longer rotates or renders | Modifications to cube: Add `cube.position.x = -2`. All other cube code unchanged. Animation loop adds diamond rotation but does not modify cube rotation logic. Risk: Accidentally removing `cube.rotation` lines during edit. Mitigation: Verify cube rotation lines remain intact after adding diamond rotation. |
+| **OrbitControls stop working** | Very Low | High — Camera interaction broken | No changes to OrbitControls initialization or update logic. Diamond addition does not affect event listeners or camera matrix. Prior orbit established working pattern. |
+| **Resize handler breaks** | Very Low | Medium — Canvas does not adapt to window changes | No changes to resize handler. Camera aspect ratio and renderer size updates remain unchanged. Diamond is part of scene graph and automatically included in render. |
+| **CSS styling breaks** | Very Low | Low — White margins reappear | No changes to `src/style.css`. Viewport styling (`margin: 0; padding: 0; overflow: hidden;`) remains intact. |
