@@ -28,6 +28,12 @@ const diamond = new THREE.Mesh(diamondGeometry, diamondMaterial);
 diamond.position.x = 2;
 scene.add(diamond);
 
+const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x4ecdc4 });
+const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+sphere.position.set(0, 2, 0);
+scene.add(sphere);
+
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
@@ -43,6 +49,8 @@ function animate() {
   cube.rotation.y += 0.01;
   diamond.rotation.x += 0.01;
   diamond.rotation.y += 0.01;
+  sphere.rotation.x += 0.015;
+  sphere.rotation.z += 0.015;
   controls.update();
   renderer.render(scene, camera);
 }
