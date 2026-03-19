@@ -2,100 +2,118 @@
 
 ## Desired Outcome
 
-The Three.js scene transforms from a static demonstration into a living, reactive environment that responds to user presence. When a developer or stakeholder views the scene, they experience:
+When this orbit completes, the Three.js scene will feel tactile and responsive to user presence. The scene will exhibit continuous, organic motion across all three objects (cube, diamond, sphere), respond subtly to mouse movement through dynamic lighting, and display soft shadows that ground the objects in a shared space. Users opening the page will perceive a cohesive, living scene rather than a static demonstration, without performance degradation or visual clutter.
 
-- **Continuous ambient motion**: The diamond rotates on a distinct axis from the cube, and the sphere orbits the center point in a slow, hypnotic path
-- **Light responsiveness**: Mouse movement subtly shifts the directional light's orientation or intensity, creating a sense that the scene "notices" the viewer
-- **Depth through shadows**: Soft shadows ground the geometric objects in space, with a dark ground plane catching cast shadows without disrupting the minimalist aesthetic
+**Date Context:** As of March 19, 2026, this enhancement aligns with modern web graphics expectations where lightweight interactivity is standard for portfolio and demonstration projects.
 
-This enhancement proves the scene is production-ready for interactive applications while maintaining the under-100-line constraint and vanilla JavaScript architecture.
-
-**Success looks like**: A viewer moving their mouse across the viewport sees the lighting shift gently, the sphere traces a visible orbital path over 10–15 seconds, and shadows provide spatial cues without performance degradation. The scene feels tactile and alive, not static.
+**User Impact:**
+- Portfolio viewers spend more time engaging with the scene due to responsive feedback
+- The scene communicates technical sophistication through smooth animation and shadows
+- Mouse interaction provides immediate visual feedback, creating a sense of direct manipulation
 
 ## Constraints
 
-### Technical Boundaries
-- **No new dependencies**: Shadows and interaction must use Three.js built-in capabilities only
-- **100-line JavaScript limit**: All logic must remain in `src/main.js` under 100 lines total
-- **No frameworks or postprocessing**: Plain JavaScript only, no shader effects or postprocessing pipelines
-- **Preserve existing functionality**: OrbitControls, window resize handling, and current rotation animations must remain intact
+**Technical Boundaries:**
+- No additional npm dependencies beyond existing `three` and `vite`
+- No postprocessing effects or shader modifications
+- All logic remains in `src/main.js`
+- Total JavaScript must not exceed 100 lines
+- Preserve existing OrbitControls and window resize handling
+- Maintain dark background aesthetic (0x1a1a2e)
 
-### Design Boundaries
-- **Dark aesthetic preservation**: Ground plane and shadows must not introduce bright surfaces or clash with the 0x1a1a2e background
-- **Subtlety requirement**: Hover interaction should be perceptible but not jarring—light shifts should feel like ambient changes, not spotlight tracking
-- **Performance budget**: Shadows must not drop frame rate below 60fps on a mid-range laptop (2020+ hardware)
+**Performance Requirements:**
+- Must maintain 60fps on mid-range devices (2020+ hardware)
+- Shadow rendering must not exceed 5ms per frame
+- Mouse interaction must have imperceptible latency (<16ms response time)
 
-### Non-Goals
-- Complex physics or collision detection
-- Multi-object hover states or click handlers
-- Advanced lighting techniques (HDRI, area lights, light probes)
-- Custom geometry or texture mapping
+**Architectural Limits:**
+- No refactoring of existing scene setup pattern
+- Existing objects (cube, diamond, sphere) must retain their current materials and geometries
+- The ground plane must be visually subordinate — not a focal element
+
+**Non-Goals:**
+- No audio or sound effects
+- No additional 3D objects beyond the ground plane
+- No UI overlays or text elements
+- No touch gesture support beyond what OrbitControls provides
 
 ## Acceptance Boundaries
 
-### Motion Implementation
-- **Minimum acceptable**: Diamond rotates on at least one axis different from the cube's X/Y rotation. Sphere position changes over time in a circular or elliptical path.
-- **Target**: Diamond rotates on Z-axis at a slower rate than cube. Sphere completes a smooth orbital path with radius 3–5 units in 12–15 seconds.
-- **Stretch**: Sphere orbit includes slight Y-axis variation (elliptical path) for additional depth.
+### Motion & Animation
+**Required:**
+- Diamond rotates on Y-axis (different from cube's X+Y rotation)
+- Sphere orbits center point in a circular path (radius: 2-3 units, period: 5-8 seconds)
+- All animations run continuously without stuttering
 
-### Hover Interaction
-- **Minimum acceptable**: Mouse movement triggers a measurable change in either directional light intensity or orientation within 16ms (one frame at 60fps).
-- **Target**: Directional light target position shifts smoothly based on normalized mouse coordinates, with light following cursor position with slight damping/lag for organic feel.
-- **Stretch**: Light intensity also varies subtly (±10–20%) based on distance from viewport center.
+**Acceptable Range:**
+- Diamond rotation speed: 0.001 - 0.005 rad/frame
+- Sphere orbit radius: 2.0 - 3.5 units
+- Sphere orbit period: 4 - 10 seconds
 
-### Shadow Quality
-- **Minimum acceptable**: Renderer has `shadowMap.enabled = true`. Cube, diamond, and sphere have `castShadow = true`. A ground plane mesh has `receiveShadow = true` and is visible below objects.
-- **Target**: Shadows are soft (PCFSoftShadowMap), ground plane is dark (e.g., 0x0a0a0f) and large enough to catch all cast shadows, shadow resolution is 1024×1024 or higher.
-- **Stretch**: Shadow camera frustum is optimized to minimize artifacts, with no visible shadow map boundaries or pixelation.
+### Light Interaction
+**Required:**
+- Mouse movement modifies DirectionalLight intensity or position
+- Effect is perceptible but not jarring (smooth, damped response)
+- Interaction does not interfere with OrbitControls
+
+**Acceptable Range:**
+- Light intensity variation: 0.3 - 1.2 (never fully dark)
+- Light position shift: within 5 units of original position
+- Damping factor: 0.05 - 0.15 (higher = smoother)
+
+### Shadow System
+**Required:**
+- Renderer shadow map enabled (type: PCFSoftShadowMap)
+- Cube, diamond, and sphere cast shadows
+- Ground plane receives shadows
+- Ground plane is dark, low-contrast, and does not distract from objects
+
+**Acceptable Range:**
+- Ground plane size: 10x10 to 20x20 units
+- Ground plane color: 0x0a0a0a to 0x2a2a2a
+- Shadow map resolution: 1024 to 2048 (balance quality vs performance)
 
 ### Code Quality
-- **Non-negotiable**: Total JavaScript remains ≤100 lines in `src/main.js`. No external files or modules introduced.
-- **Target**: Code remains readable with clear variable names and logical grouping (setup, animation loop, event handlers).
-
-### Visual Coherence
-- **Minimum acceptable**: Ground plane does not visually conflict with existing background color. Shadows are visible but not harsh.
-- **Target**: Scene maintains dark, minimalist aesthetic. New elements feel intentional, not tacked-on.
+**Hard Limits:**
+- JavaScript line count: ≤ 100 lines (excluding whitespace)
+- No linting errors with standard ESLint rules
+- No console errors or warnings in browser DevTools
 
 ## Trust Tier Assignment
 
-**Assigned Tier**: Tier 2 (Supervised)
+**Assigned Tier:** Tier 2 (Supervised)
 
-**Rationale**:
+**Rationale:**
+This orbit operates on an existing, functional codebase with clear acceptance boundaries. The blast radius is contained (only affects visual presentation, no data or architecture changes), but the 100-line constraint creates risk of quality degradation through over-optimization. Shadows and mouse interaction introduce performance considerations that require validation on target hardware.
 
-This orbit operates on an existing, functional codebase with strict constraints (100-line limit, vanilla JavaScript). The changes introduce:
+**Tier 2 is appropriate because:**
+- Changes are reversible (version controlled, no data migration)
+- Acceptance criteria are measurable through visual inspection and performance profiling
+- Domain expertise (Three.js rendering) is well-understood but requires human judgment for aesthetic balance
+- Risk exists that line count constraint forces removal of defensive error handling
 
-1. **Shadow rendering**: Moderate complexity, potential for performance impact if misconfigured
-2. **Mouse interaction**: Event handler logic that could interfere with OrbitControls or introduce subtle bugs
-3. **Orbital motion math**: Trigonometry for sphere orbit that could miscalculate or drift
+**Why not Tier 1:** The aesthetic quality of "subtle" interaction is subjective and requires human review. Performance impact of shadows varies by device.
 
-**Why not Tier 1 (Autonomous)**:
-- Shadow map configuration has multiple quality/performance tradeoffs requiring judgment
-- Mouse interaction must coexist with OrbitControls without conflict—risk of subtle UX bugs
-- The 100-line constraint is tight, requiring careful implementation choices that AI might not optimize correctly on first attempt
-
-**Why not Tier 3 (Gated)**:
-- Blast radius is contained to a development prototype, not production infrastructure
-- No data handling, authentication, or security surface area
-- Rollback is trivial (git revert), and failures are immediately visible (scene breaks or looks wrong)
-
-**Supervision needs**: Code review to verify shadow performance, test mouse interaction edge cases (viewport boundaries, OrbitControls conflicts), and confirm line count compliance.
+**Why not Tier 3:** No security implications, no external integrations, no user data, no breaking changes to public API.
 
 ## Dependencies
 
-### Prior Orbits
-- **Orbit 1** (2e6b889d-24a5-4428-baf6-4494433a3cae): Established the base Three.js project structure with Vite, scene setup, and OrbitControls. This orbit extends that foundation without modifying package.json or project structure.
-- **Orbit 2** (feb8e410-9390-453a-b597-a92938a16631): Added diamond and sphere geometries with MeshStandardMaterial. This orbit animates those objects and adds shadows—requires those objects to exist with correct material types.
+**Prior Orbits:**
+- Orbit 1 (2e6b889d): Established base Three.js scene structure — `src/main.js`, `index.html`, `src/style.css`
+- Orbit 2 (7cac94ca): Added diamond and sphere geometries that this orbit will animate
 
-### Technical Dependencies
-- **Three.js shadowMap**: Scene must use WebGLRenderer with `shadowMap.enabled = true`. DirectionalLight must have `castShadow = true` and properly configured shadow camera.
-- **OrbitControls**: Existing controls must remain functional. Mouse move handlers must not interfere with control drag events (likely requires checking mouse button state or using `pointermove` instead of `mousemove`).
-- **requestAnimationFrame loop**: Sphere orbit and hover effects must integrate into existing animation loop without creating competing RAF calls.
+**Technical Dependencies:**
+- Three.js v0.160.0 (must support `PCFSoftShadowMap`, `OrbitControls`, `PlaneGeometry`)
+- Vite dev server for hot module reloading during development
+- Browser support for WebGL 1.0 (minimum)
 
-### External Systems
-- None. This is a self-contained frontend demo with no API calls, database connections, or external services.
+**Codebase Surface:**
+- `src/main.js`: Scene setup, camera, renderer, lights, objects, animation loop (lines 1-85 approx)
+- `package.json`: Confirmed no additional dependencies required
+- `src/style.css`: No changes required (canvas already full-viewport)
 
-### Data Dependencies
-- **Scene graph state**: Requires references to `directionalLight`, `sphere`, `diamond`, and `cube` objects created in prior orbit. Implementation must ensure these references are accessible in animation loop scope.
+**External Systems:**
+None. This orbit is self-contained within the local development environment.
 
-### Delivery Date Context
-As of **March 19, 2026**, this enhancement aligns with the trajectory to build a polished Three.js demo. No external deadlines, but maintaining momentum suggests completing within the current development session.
+**Assumed State:**
+The codebase at completion of Orbit 2 contains a rotating cube, static diamond, and static sphere with `MeshStandardMaterial`, plus `AmbientLight`, `DirectionalLight`, and functional `OrbitControls`.
