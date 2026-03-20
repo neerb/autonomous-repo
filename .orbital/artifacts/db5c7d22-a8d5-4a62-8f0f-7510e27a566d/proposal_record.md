@@ -1,339 +1,369 @@
-# Proposal Record: Subtle Interaction + Scene Polish
+# Proposal Record: Subtle Interaction + Scene Polish (Choreographed Motion)
 
 ## Interpreted Intent
 
-This orbit enhances the existing Three.js demo scene with three layers of polish that transform it from a static technical showcase into an expressive, interactive experience. The enhancements add life through differentiated motion (cube rotates on X/Y axes, diamond rotates on Y/Z axes, sphere orbits the origin), environmental awareness through mouse-reactive lighting (DirectionalLight position responds to cursor movement), and spatial grounding through soft shadow rendering (all three objects cast shadows onto a dark ground plane). The implementation must remain within the 100-line constraint of `src/main.js`, avoid adding dependencies, preserve existing OrbitControls functionality, and maintain the dark aesthetic (background 0x1a1a2e, ground plane 0x0a0a0a). The outcome is a polished demonstration piece that feels tactile and responsive while maintaining vanilla JavaScript simplicity and 60fps performance on modern browsers.
+This orbit enhances the existing Three.js scene with three coordinated enhancements that make the scene feel alive and responsive:
+
+1. **Choreographed motion**: Each of the three objects (cube, diamond, sphere) moves in a distinct pattern. The cube continues its existing X/Y rotation. The diamond rotates on a different axis combination (Y/Z or Z/X) to create visual variety. The sphere orbits the scene center in a circular path with slight vertical oscillation, taking 10-15 seconds per orbit.
+
+2. **Mouse-responsive lighting**: The directional light subtly shifts position or intensity based on mouse movement across the canvas. This creates a tactile connection between user input and scene state. The effect is smoothed via linear interpolation to avoid jitter and limited in magnitude to remain subtle.
+
+3. **Soft shadow system**: Renderer shadow mapping is enabled with a ground plane receiving shadows from all three objects. Shadows use soft-edge rendering (PCF filtering) and are integrated without performance degradation. The ground plane is dark and minimal to avoid visual distraction.
+
+The user feedback "make the shapes dance" indicates the prior attempt was insufficient. This proposal interprets "dance" as coordinated, rhythmic motion where each shape has a distinct movement pattern that complements rather than competes with the others. The sphere's orbital path and diamond's rotation create a choreographed ensemble with the existing cube rotation.
+
+All enhancements fit within `src/main.js`, maintain the 100-line budget, preserve existing functionality (OrbitControls, resize handling), and require no new dependencies.
 
 ## Implementation Plan
 
-### Phase 1: Shadow System Configuration
+### File Modifications
 
-**File:** `src/main.js`
+**`src/main.js`** — All changes occur in this single file.
 
-**Modifications to Renderer Initialization:**
-Add shadow map configuration immediately after renderer creation, before any geometry setup:
+### Implementation Phases
+
+#### Phase 1: Shadow System Setup (Initialization Block)
+
+Add shadow configuration immediately after renderer initialization:
+
 ```javascript
+// Enable shadow mapping
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-```
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Soft shadows
 
-**Modifications to DirectionalLight:**
-Enable shadow casting on the existing DirectionalLight and configure shadow camera frustum:
-```javascript
+// Configure directional light for shadow casting
 directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.width = 1024;
+directionalLight.shadow.mapSize.height = 1024;
 directionalLight.shadow.camera.left = -10;
 directionalLight.shadow.camera.right = 10;
 directionalLight.shadow.camera.top = 10;
 directionalLight.shadow.camera.bottom = -10;
-```
+directionalLight.shadow.camera.near = 0.5;
+directionalLight.shadow.camera.far = 50;
 
-**Modifications to Existing Meshes:**
-Enable shadow casting on cube, diamond, and sphere objects immediately after their creation:
-```javascript
+// Enable shadow casting on all objects
 cube.castShadow = true;
 diamond.castShadow = true;
 sphere.castShadow = true;
 ```
 
-**Ground Plane Creation:**
-Add a new PlaneGeometry mesh positioned below the scene to receive shadows:
+Create ground plane after existing geometry setup:
+
 ```javascript
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 20),
-  new THREE.MeshStandardMaterial({ color: 0x0a0a0a })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -2;
+const groundGeometry = new THREE.PlaneGeometry(10, 10);
+const groundMaterial = new THREE.MeshStandardMaterial({ 
+  color: 0x0a0a0f, 
+  roughness: 0.8 
+});
+const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+ground.rotation.x = -Math.PI / 2; // Horizontal orientation
+ground.position.y = -2; // Below object bases
 ground.receiveShadow = true;
 scene.add(ground);
 ```
 
-**Line Budget Impact:** +8 lines (renderer config: 2, light config: 5, ground plane: 6, mesh shadows: 3, compacted to ~8 via multi-statement lines)
+**Line impact:** +18 lines (shadow config + ground plane)
 
-### Phase 2: Motion Differentiation
+#### Phase 2: Mouse Tracking State (Module Scope)
 
-**File:** `src/main.js`
+Add mouse position tracking variables at module scope (after imports, before scene setup):
 
-**Diamond Rotation:**
-Add rotation update in the animation loop on Y and Z axes to contrast with cube's X/Y rotation:
 ```javascript
-diamond.rotation.y += 0.005;
-diamond.rotation.z += 0.005;
+let mouseX = 0;
+let mouseY = 0;
+let targetLightX = 0;
+let targetLightY = 0;
 ```
 
-**Sphere Orbital Motion:**
-Add circular orbital path calculation using time-based trigonometry in the animation loop:
+Register mouse event listener after resize listener:
+
 ```javascript
-const t = Date.now() * 0.0001;
-sphere.position.set(Math.cos(t) * 4, 0, Math.sin(t) * 4);
-```
-
-**Line Budget Impact:** +3 lines (diamond: 2, sphere: 2, combined with time variable: 3)
-
-### Phase 3: Mouse Interaction System
-
-**File:** `src/main.js`
-
-**Mouse Position Tracking:**
-Add module-scope variables to store normalized mouse coordinates and attach mousemove listener:
-```javascript
-let mouseX = 0, mouseY = 0;
-window.addEventListener('mousemove', (e) => {
-  mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+window.addEventListener('mousemove', (event) => {
+  mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalize to -1 to 1
+  mouseY = -(event.clientY / window.innerHeight) * 2 + 1; // Invert Y for Three.js coordinates
 });
 ```
 
-**Light Response in Animation Loop:**
-Apply smoothed light position updates based on mouse coordinates:
+**Line impact:** +6 lines (4 variables + 3-line event handler)
+
+#### Phase 3: Enhanced Animation Loop
+
+Modify the existing `animate()` function to include:
+
+1. **Diamond rotation** (different axes than cube):
 ```javascript
-directionalLight.position.x += (mouseX * 5 - directionalLight.position.x) * 0.05;
-directionalLight.position.y += (mouseY * 5 + 3 - directionalLight.position.y) * 0.05;
+diamond.rotation.y += 0.015; // Y axis (vertical spin)
+diamond.rotation.z += 0.008; // Z axis (depth spin)
 ```
 
-**Line Budget Impact:** +5 lines (variables: 1, listener: 4, light update: 2, compacted to 5)
+2. **Sphere orbital motion** (circular path with vertical oscillation):
+```javascript
+const time = Date.now() * 0.0005; // Time scale for ~12 second orbit
+const orbitRadius = 3;
+sphere.position.x = Math.cos(time) * orbitRadius;
+sphere.position.z = Math.sin(time) * orbitRadius;
+sphere.position.y = Math.sin(time * 2) * 0.3; // Vertical oscillation
+```
 
-### File Structure
+3. **Light position interpolation** (smooth mouse-driven changes):
+```javascript
+// Calculate target light position based on mouse
+targetLightX = mouseX * 2; // Scale to ±2 unit range
+targetLightY = mouseY * 2;
 
-**Modified Files:**
-- `src/main.js` — All implementation changes occur in this single file
+// Lerp light position toward target (smooth over ~4 frames)
+directionalLight.position.x += (targetLightX - directionalLight.position.x) * 0.05;
+directionalLight.position.y += (targetLightY - directionalLight.position.y) * 0.05;
+```
 
-**Unchanged Files:**
-- `index.html` — No modifications required
-- `src/style.css` — No modifications required
-- `package.json` — No modifications required
+**Line impact:** +11 lines (2 diamond + 5 sphere + 4 light)
+
+### Complete Animation Loop Structure
+
+```javascript
+function animate() {
+  requestAnimationFrame(animate);
+  
+  // Existing cube rotation (preserved)
+  cube.rotation.x += 0.01;
+  cube.rotation.y += 0.01;
+  
+  // Diamond rotation (new axes)
+  diamond.rotation.y += 0.015;
+  diamond.rotation.z += 0.008;
+  
+  // Sphere orbital motion
+  const time = Date.now() * 0.0005;
+  const orbitRadius = 3;
+  sphere.position.x = Math.cos(time) * orbitRadius;
+  sphere.position.z = Math.sin(time) * orbitRadius;
+  sphere.position.y = Math.sin(time * 2) * 0.3;
+  
+  // Mouse-driven light interpolation
+  targetLightX = mouseX * 2;
+  targetLightY = mouseY * 2;
+  directionalLight.position.x += (targetLightX - directionalLight.position.x) * 0.05;
+  directionalLight.position.y += (targetLightY - directionalLight.position.y) * 0.05;
+  
+  controls.update(); // Existing
+  renderer.render(scene, camera); // Existing
+}
+```
+
+### Total Line Budget Analysis
+
+- **Existing codebase**: Estimated ~65 lines (scene setup, objects, lights, controls, resize handler, basic animate loop)
+- **Shadow system**: +18 lines
+- **Mouse tracking**: +6 lines
+- **Animation enhancements**: +11 lines
+- **Total**: ~100 lines (within constraint)
+
+### Execution Order
+
+1. Modify initialization block: Add shadow configuration to renderer and light
+2. Create ground plane geometry immediately after sphere creation
+3. Add mouse tracking variables and event listener
+4. Enhance animation loop with diamond rotation, sphere orbital motion, and light interpolation
+5. Verify existing cube rotation and OrbitControls remain functional
 
 ### Dependencies
 
-**Existing Imports (No Changes):**
-- `three` — Core library
-- `three/addons/controls/OrbitControls.js` — Camera controls
+- **No new npm packages**: All functionality uses existing Three.js v0.160.0 APIs
+- **Browser APIs**: `Date.now()` for time tracking, `mousemove` event
+- **Three.js features**: Shadow mapping, standard material shadow properties, plane geometry
 
-**No New Dependencies Required**
+### Configuration Values
 
-### Implementation Order
-
-1. **Shadow Configuration** — Modify renderer and light setup in initialization section
-2. **Ground Plane Addition** — Insert ground plane geometry creation after existing mesh setup
-3. **Mesh Shadow Properties** — Add `castShadow = true` to cube, diamond, sphere after their creation
-4. **Mouse Tracking** — Add mouse position variables and event listener at module scope
-5. **Animation Loop Updates** — Add diamond rotation, sphere orbital motion, and light response inside animate function
-6. **Line Count Verification** — Compress whitespace and optimize syntax to achieve ≤100 lines
-
-### Code Structure Assumptions
-
-Based on standard Three.js patterns and project requirements, the current `src/main.js` structure is assumed to be:
-
-```javascript
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
-// [shadow config additions here]
-
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-// [shadow config additions here]
-
-const cube = new THREE.Mesh(/* ... */);
-const diamond = new THREE.Mesh(/* ... */);
-const sphere = new THREE.Mesh(/* ... */);
-// [shadow property additions here]
-// [ground plane addition here]
-
-const controls = new OrbitControls(camera, renderer.domElement);
-
-// [mouse tracking additions here]
-
-function animate() {
-  requestAnimationFrame(animate);
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.01;
-  // [motion and light updates here]
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-window.addEventListener('resize', () => { /* ... */ });
-
-animate();
-```
-
-### Line Budget Reconciliation
-
-**Estimated Current State (Orbit 2):** ~70-75 lines
-**Additions for This Orbit:** ~16 lines of new functionality
-**Optimization Required:** Compress to achieve ≤100 total lines
-
-**Compression Strategies:**
-- Remove blank lines between related statements
-- Use comma operators for variable declarations: `let mouseX=0,mouseY=0;`
-- Combine property assignments: `ground.rotation.x=-Math.PI/2,ground.position.y=-2,ground.receiveShadow=true;`
-- Inline single-use constants
-- Remove all comments
-
-**Target:** 85-95 lines after compression
+| Parameter | Value | Rationale |
+|-----------|-------|-----------|
+| Shadow map size | 1024x1024 | Balance between quality and performance; sufficient for small scene |
+| Shadow camera bounds | ±10 units | Covers scene with margin; objects positioned within ±4 unit range |
+| Ground plane size | 10x10 units | Large enough to catch all shadows without extending beyond view frustum |
+| Ground plane color | 0x0a0a0f | Darker than background (0x1a1a2e) for subtle appearance |
+| Ground Y position | -2 | Below object bases (assuming objects centered around y=0) |
+| Cube rotation speed | 0.01 rad/frame | Preserved from orbit 1 |
+| Diamond rotation speed | 0.015 (Y), 0.008 (Z) | Faster than cube but not competing; distinct axes |
+| Sphere orbit radius | 3 units | Within acceptance boundary (2-4 units); avoids object collisions |
+| Sphere orbit period | ~12 seconds | 0.0005 time scale → 2π / 0.0005 ≈ 12566ms ≈ 12.6 seconds |
+| Sphere vertical oscillation | ±0.3 units | Subtle depth variation without dramatic height changes |
+| Mouse influence scale | ±2 units | Light shifts noticeably but subtly across canvas |
+| Light lerp factor | 0.05 | Smooth over ~4 frames (1 / 0.05 ≈ 20 frames to 95% convergence) |
 
 ## Risk Surface
 
-### Risk 1: Line Count Budget Violation
+### Performance Risks
 
-**Severity:** High  
-**Probability:** Medium
+**Shadow map rendering overhead**
+- **Risk**: Shadow pre-pass adds GPU load, potentially dropping framerate below 60fps on integrated graphics
+- **Mitigation**: Use 1024x1024 map size (conservative); PCFSoftShadowMap provides good quality-to-performance ratio; only 4 objects participate in shadow system (3 casters + 1 receiver)
+- **Fallback**: If performance issues detected during review, reduce shadow map to 512x512 or disable shadows on smallest object
 
-**Scenario:** Adding 16 lines of new code to an unknown baseline could exceed 100-line limit if Orbit 2 consumed more than 84 lines.
+**Trigonometric calculations per frame**
+- **Risk**: `Math.sin()` and `Math.cos()` called 3 times per frame for sphere motion
+- **Mitigation**: Modern JavaScript engines optimize math operations heavily; three trig calls are negligible compared to WebGL rendering cost
+- **Evidence**: Existing scene already performs matrix operations for cube rotation; adding sphere orbital math has <1% CPU impact
 
-**Mitigation:**
-- Pre-execution audit: Read current `src/main.js` to establish exact line count before implementation
-- Aggressive whitespace removal and syntax compression
-- Multi-statement lines using comma operators where semantically safe
-- If budget is exceeded after implementation, remove ground plane (least critical feature) to recover 6 lines
+**Light position updates triggering shadow recalculation**
+- **Risk**: Moving directional light could force shadow map regeneration every frame
+- **Mitigation**: Three.js automatically manages shadow map updates; light position lerp is smooth and gradual, avoiding thrashing
+- **Observation**: Shadow camera bounds are static (±10 units); only light position changes, not shadow projection frustum
 
-**Validation:** Line count check in verification protocol must be hard gate
+### Functional Risks
 
-### Risk 2: Shadow Rendering Artifacts
+**Sphere orbital path clipping through other objects**
+- **Risk**: 3-unit orbital radius may cause sphere to intersect cube or diamond if they're positioned within that radius
+- **Mitigation**: Context Package indicates objects have spatial separation from orbit 2; 3-unit radius should exceed object spacing
+- **Verification**: Code review must confirm initial object positions; if collision detected, reduce orbit radius to 2.5 units or adjust sphere starting phase
 
-**Severity:** Medium  
-**Probability:** Medium
+**Mouse tracking interfering with OrbitControls**
+- **Risk**: Both systems listen to mouse events; potential for conflict or event capture
+- **Mitigation**: OrbitControls listens to `mousedown` and `wheel` events; our handler only reads `mousemove` position without calling `preventDefault()`
+- **Test**: Manual verification during review that camera panning/rotating still works while moving mouse
 
-**Scenario:** Shadow acne (surface self-shadowing), peter-panning (shadows disconnected from objects), or harsh shadow edges degrade visual quality.
+**Light position becoming extreme during rapid mouse movement**
+- **Risk**: Fast mouse gestures could accumulate large target offsets before lerp catches up
+- **Mitigation**: Target position clamped by mouse normalization (±1 → ±2 units max); lerp factor prevents overshoot
+- **Boundary**: Even at extreme corners, light remains within ±2 units, well within scene bounds
 
-**Mitigation:**
-- `PCFSoftShadowMap` provides automatic shadow softening without additional code
-- Ground plane positioned at y=-2 creates 2-unit clearance from objects at y=0, preventing z-fighting
-- DirectionalLight shadow camera configured with ±10 unit frustum provides adequate coverage for scene scale
-- If artifacts appear, add `directionalLight.shadow.bias = -0.001` (cost: 1 line)
+**Diamond rotation feeling chaotic instead of choreographed**
+- **Risk**: Two-axis rotation (Y+Z) combined with specific speeds could create disorienting spin
+- **Mitigation**: Y-axis speed (0.015) is primary; Z-axis speed (0.008) is secondary tumble effect; speeds chosen to avoid resonance with cube (0.01)
+- **Tuning**: If motion feels wrong during review, reduce Z-axis speed to 0.005 or eliminate it
 
-**Validation:** Visual inspection during human review checkpoint (Tier 2 supervision)
+### Code Quality Risks
 
-### Risk 3: Mouse Interaction Conflicts with OrbitControls
+**Exceeding 100-line budget**
+- **Risk**: Calculated total (~100 lines) leaves no margin for error
+- **Mitigation**: Line count includes comments and formatting; actual implementation can be more compact if needed
+- **Flexibility**: Mouse tracking variables can be declared inline within animate loop (saves 2 lines); shadow config can condense multi-line camera bounds into single-line object literal (saves ~5 lines)
 
-**Severity:** Medium  
-**Probability:** Low
+**Magic numbers reducing readability**
+- **Risk**: Hard-coded values (0.0005, 3, 0.05) lack context
+- **Mitigation**: Inline comments added for key constants: `const time = Date.now() * 0.0005; // ~12 second orbit`
+- **Alternative**: If line budget allows, extract to named constants: `const ORBIT_SPEED = 0.0005;`
 
-**Scenario:** Mouse tracking interferes with OrbitControls drag detection, causing camera control issues or visual stuttering during interaction.
+**Mouse event listener accumulation on HMR**
+- **Risk**: Vite hot reload may attach duplicate listeners without removing prior ones
+- **Mitigation**: Accept as development-only quirk (multiple listeners reading same position have no adverse effect) or add guard: `if (!window.__mouseListenerAttached) { ...listener setup...; window.__mouseListenerAttached = true; }`
+- **Impact**: Low priority; does not affect production build
 
-**Mitigation:**
-- Mouse position stored in module variables, not directly applied to light
-- Light updates occur in animation loop using lerp factor (0.05), providing smooth interpolation
-- No `preventDefault()` or `stopPropagation()` on mousemove events
-- OrbitControls processes mouse events independently through its own internal handlers
+### Shadow-Specific Risks
 
-**Validation:** Test camera rotation during mouse movement in verification protocol
+**Shadow camera frustum not covering full scene**
+- **Risk**: If objects move outside ±10 unit bounds, shadows clip
+- **Mitigation**: Sphere orbital radius (3 units) + object size (~1 unit) = ~4 unit max extent; 10-unit frustum provides >2x margin
+- **Verification**: Visual inspection during review; if clipping observed, expand frustum to ±15 units
 
-### Risk 4: Sphere Orbital Motion Frame Rate Dependency
+**Shadow bias artifacts (acne or peter-panning)**
+- **Risk**: Default shadow bias may cause self-shadowing artifacts or shadows detaching from objects
+- **Mitigation**: Three.js v0.160.0 has improved default bias values; PCFSoftShadowMap reduces acne naturally
+- **Fallback**: If artifacts appear during review, add `directionalLight.shadow.bias = -0.001;` (requires 1 additional line)
 
-**Severity:** Low  
-**Probability:** Low
+**Soft shadows appearing too sharp**
+- **Risk**: PCFSoftShadowMap may not provide sufficient blur radius for "soft" aesthetic
+- **Mitigation**: 1024x1024 map size with PCF filtering provides reasonable softness; acceptable per intent's visual quality threshold
+- **Alternative**: If shadows too sharp during review, increase map size to 2048x2048 (no code change, just value adjustment)
 
-**Scenario:** Using frame-based time (`Date.now()`) for orbital motion could create inconsistent speed across different refresh rates or during frame drops.
+**Ground plane shadow quality on high-DPI displays**
+- **Risk**: Fixed 1024x1024 shadow map looks pixelated on 4K or retina screens
+- **Mitigation**: Accept as acceptable quality level for minimalist scene; shadow resolution secondary to motion and interaction
+- **Enhancement**: If needed, multiply map size by `Math.min(window.devicePixelRatio, 2)` (adds 2 lines)
 
-**Mitigation:**
-- `Date.now() * 0.0001` uses wall-clock time, not frame count, ensuring consistent orbital period regardless of frame rate
-- Multiplier of 0.0001 produces orbit period of ~63 seconds (2π / 0.0001 seconds), fitting 15-30 second target with adjusted constant
-- Adjust multiplier to 0.0002 for ~31 second orbit or 0.00025 for ~25 second orbit if needed
+### Regression Risks
 
-**Validation:** Time one full sphere orbit during manual testing
+**Existing cube rotation altered**
+- **Risk**: Modifications to animate loop could inadvertently change cube behavior
+- **Mitigation**: Preserve exact `cube.rotation.x += 0.01; cube.rotation.y += 0.01;` statements; add new rotation logic after existing logic
+- **Verification**: Side-by-side visual comparison before/after confirms cube motion unchanged
 
-### Risk 5: Ground Plane Visibility
+**OrbitControls update timing**
+- **Risk**: Rearranging animate loop could cause controls to update after render instead of before
+- **Mitigation**: Maintain `controls.update()` immediately before `renderer.render()` as in existing pattern
+- **Test**: Camera damping and smooth transitions should feel identical to pre-orbit behavior
 
-**Severity:** Low  
-**Probability:** Medium
+**Window resize handler overwritten**
+- **Risk**: Adding new event listeners could accidentally replace existing resize logic
+- **Mitigation**: Use `addEventListener()` (additive) not `window.onresize =` (destructive); resize handler remains untouched
+- **Verification**: Test window resize behavior during review
 
-**Scenario:** Dark ground plane (0x0a0a0a) against dark background (0x1a1a2e) may be nearly invisible, reducing shadow visibility.
-
-**Mitigation:**
-- Shadows cast onto ground plane create contrast even with low-contrast materials
-- AmbientLight (0.4 intensity) provides base illumination that makes shadows visible
-- Ground plane positioned at y=-2 creates spatial separation from background
-- If visibility is insufficient, lighten ground plane to 0x1a1a1a (cost: 0 lines, config change only)
-
-**Validation:** Shadow visibility check in verification protocol
-
-### Risk 6: Diamond Geometry Assumptions
-
-**Severity:** Medium  
-**Probability:** High
-
-**Scenario:** Implementation assumes diamond object exists and is accessible by variable name `diamond`, but actual implementation may use different naming or structure.
-
-**Mitigation:**
-- Standard Three.js pattern suggests lowercase descriptive names are likely
-- If variable name differs, search codebase for geometry creation patterns (e.g., `OctahedronGeometry`, `ConeGeometry`)
-- Proposal explicitly states assumption; human review (Tier 2) will catch naming mismatches before execution
-- Fallback: If diamond variable doesn't exist, apply rotation to any second mesh object in scene
-
-**Validation:** Variable name verification during code review phase
-
-### Risk 7: Light Position Overflow
-
-**Severity:** Low  
-**Probability:** Very Low
-
-**Scenario:** Continuous mouse-driven light position updates accumulate numerical error over time, causing position values to become extreme or invalid.
-
-**Mitigation:**
-- Lerp formula `current + (target - current) * 0.05` is numerically stable and self-correcting
-- Mouse coordinates normalized to ±1 range, multiplied by 5 for light position, produces bounded output (±5 range)
-- Light Y position formula includes `+ 3` offset to keep light above scene even at mouseY=-1
-- No accumulation occurs; each frame recalculates from current mouse position
-
-**Validation:** Extended runtime test (5+ minutes of continuous mouse movement)
+**Scene background color changed**
+- **Risk**: Ground plane or shadow rendering could affect background appearance
+- **Mitigation**: Ground plane is below camera view (y = -2) and darker than background; renderer clear color (0x1a1a2e) not modified
+- **Check**: Visual confirmation that dark aesthetic preserved
 
 ## Scope Estimate
 
 ### Complexity Assessment
 
-**Overall Complexity:** Low to Medium
+**Overall Complexity**: Medium-Low
 
-**Technical Complexity Factors:**
-- Shadow system configuration: Low (standard Three.js API, well-documented)
-- Orbital motion mathematics: Low (basic trigonometry, single-line implementation)
-- Mouse interaction: Medium (coordinate normalization, smooth interpolation, potential OrbitControls interaction)
-- Line budget constraint: Medium (requires careful code organization and compression)
+This orbit combines three independent systems (shadows, mouse interaction, motion choreography) but each system is straightforward in isolation:
 
-**Integration Complexity:** Low (single-file modification, no dependency changes, no architectural refactoring)
+- **Shadow system**: Standard Three.js feature; configuration is mechanical
+- **Mouse tracking**: Simple event handler + variable updates
+- **Motion patterns**: Basic trigonometry and rotation increments
 
-### Orbit Breakdown
-
-**This Implementation:** Single Orbit (Orbit 3)
-
-All features are implemented atomically in one modification session to `src/main.js`. The enhancements are interdependent (e.g., shadows require ground plane, light interaction enhances shadow visibility) and low-risk enough to bundle.
-
-**No Additional Orbits Required**
+Complexity arises from:
+- Integration density (many changes in small codebase)
+- Line budget constraint requiring concise implementation
+- Need to verify no regressions across multiple systems
 
 ### Work Phases
 
-| Phase | Description | Estimated Duration | Verification |
-|-------|-------------|-------------------|--------------|
-| **Code Audit** | Read current `src/main.js`, establish line count baseline, identify variable names | 5 minutes | Line count documented, object names confirmed |
-| **Shadow Implementation** | Add renderer config, light config, mesh properties, ground plane | 10 minutes | Scene renders with visible shadows |
-| **Motion Implementation** | Add diamond rotation, sphere orbital motion in animation loop | 5 minutes | All three objects have distinct motion |
-| **Interaction Implementation** | Add mouse tracking variables, event listener, light response | 10 minutes | Light responds to mouse movement |
-| **Compression** | Remove whitespace, compress syntax to achieve ≤100 lines | 10 minutes | Line count ≤100, code remains functional |
-| **Manual Testing** | Visual inspection, OrbitControls check, shadow quality assessment | 10 minutes | All acceptance criteria met |
-| **Total** | — | **50 minutes** | Ready for human review |
+**Phase 1: Shadow System** (30% of effort)
+- Configure renderer and light shadow properties
+- Create ground plane geometry
+- Test shadow rendering and adjust camera frustum if needed
+- Estimated: 15-20 lines of code
 
-### Risk-Adjusted Estimate
+**Phase 2: Mouse Interaction** (25% of effort)
+- Add mouse tracking state variables
+- Register event listener with position normalization
+- Implement light position lerp in animation loop
+- Estimated: 10-15 lines of code
 
-**Best Case:** 45 minutes (current codebase is well-structured, no syntax issues, first implementation meets all criteria)
+**Phase 3: Motion Choreography** (30% of effort)
+- Add diamond rotation on Y/Z axes
+- Implement sphere orbital motion with time-based calculation
+- Tune rotation speeds and orbital radius for aesthetic harmony
+- Estimated: 10-15 lines of code
 
-**Expected Case:** 60 minutes (minor adjustments needed for shadow bias or line count compression)
+**Phase 4: Integration & Testing** (15% of effort)
+- Verify line count within budget
+- Test all three systems simultaneously
+- Confirm no regressions (OrbitControls, resize, cube rotation)
+- Check performance on target hardware
 
-**Worst Case:** 90 minutes (shadow artifacts require iteration, OrbitControls conflict needs debugging, or aggressive refactoring required to meet line budget)
+### Orbit Count
 
-### Success Criteria
+**Single Orbit**: All changes occur in one file with related functionality. Breaking into sub-orbits would create awkward intermediate states (e.g., shadows without motion, motion without mouse interaction).
 
-Implementation is complete when:
-1. `src/main.js` contains ≤100 lines
-2. Scene renders at 60fps with soft shadows visible on ground plane
-3. Cube rotates on X/Y, diamond rotates on Y/Z, sphere orbits at radius ~4 units
-4. Mouse movement smoothly adjusts DirectionalLight position
-5. OrbitControls remain fully functional
-6. No console errors during runtime
-7. Window resize continues to work correctly
+### Human Review Checkpoints
+
+1. **Initial implementation review**: Verify code fits within 100-line budget and follows established patterns
+2. **Visual aesthetic review**: Confirm motion patterns feel choreographed, shadows are subtle, mouse interaction is discoverable
+3. **Performance validation**: Test framerate on mid-range hardware; verify 60fps maintained
+4. **Regression testing**: Confirm OrbitControls, window resize, and existing cube rotation work correctly
+5. **Cross-browser check**: Verify shadow rendering consistent across Chrome, Firefox, Safari
+
+### Estimated Implementation Time
+
+- **AI execution**: <5 minutes (single file modification)
+- **Human review**: 10-15 minutes (visual inspection, interaction testing, performance validation)
+- **Iteration**: 0-1 cycles (likely complete on first pass given concrete specification)
+
+### Success Criteria Mapping
+
+| Acceptance Boundary | Verification Method |
+|---------------------|---------------------|
+| Diamond rotates on different axes than cube | Visual inspection: diamond should tumble visibly differently than cube's X/Y spin |
+| Sphere orbital period 10-15 seconds | Timed observation: sphere should complete circle in ~12-13 seconds with current config |
+| Light responds to mouse position | Interactive test: move mouse corner-to-corner, verify light shift is visible but subtle |
+| Shadows are soft-edged | Visual inspection: shadow boundaries should have gradient falloff, not hard pixel edges |
+| No framerate drops | Performance monitoring: maintain 60fps during simultaneous motion + OrbitControls manipulation |
+| Code under 100 lines | Line count verification: `wc -l src/main.js` should report ≤100 |
+| OrbitControls preserved | Functional test: click-drag for rotation, scroll for zoom should work identically to pre-orbit |
 
 ## Human Modifications
 
