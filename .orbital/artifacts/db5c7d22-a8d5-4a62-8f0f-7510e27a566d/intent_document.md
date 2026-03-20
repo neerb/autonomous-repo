@@ -1,93 +1,98 @@
-# Subtle Interaction + Scene Polish
+# Subtle Interaction + Scene Polish (Choreographed Motion)
 
 ## Desired Outcome
 
-When a developer or viewer opens the Three.js scene in their browser on March 19, 2026, they experience a living, tactile environment instead of a static demonstration. The scene communicates depth and responsiveness through three distinct motion layers: the cube continues its existing rotation, the diamond rotates on a different axis creating visual counterpoint, and the sphere traces a gentle orbital path around the center. Mouse movement creates a subtle reactive quality as lighting responds to cursor position, making the scene feel aware of the user's presence. Soft shadows ground all objects in space, with a dark, unobtrusive plane catching shadow projections and reinforcing the scene's three-dimensional structure. The enhancement transforms the starter project from a technical proof-of-concept into an expressive, polished demonstration piece while maintaining its minimal footprint and vanilla JavaScript architecture.
+The Three.js scene transforms from a static demonstration into a living, breathing interactive experience. Users perceive the scene as dynamic and responsive: shapes move in coordinated patterns that feel intentional rather than random, lighting responds subtly to mouse position creating a sense of connection between user action and scene state, and soft shadows ground the objects in space. The enhanced scene maintains its minimalist aesthetic while demonstrating that simple geometric primitives can create engaging visual experiences through thoughtful motion design and interaction.
+
+**Success looks like:** A visitor moves their mouse across the canvas and immediately perceives that the scene is responding. The objects move in harmonious patterns — the diamond spinning on a different axis than the cube, the sphere tracing a gentle orbital path — creating visual interest without distraction. Shadows reinforce the spatial relationships between objects and make the scene feel more physically grounded. The interaction is discovered naturally without instruction, and the motion patterns feel purposeful rather than chaotic.
 
 ## Constraints
 
-**Technical Stack**
-- No additional npm dependencies beyond the existing `three` and `vite` packages
-- No postprocessing effects, shaders, or render passes
-- All interaction and animation logic remains in `src/main.js`
-- No TypeScript, frameworks, or build step changes
-- Preserve the existing OrbitControls functionality without interference
+### Technical Boundaries
+- **No new dependencies**: Three.js and existing libraries only — no postprocessing libraries, no animation frameworks, no particle systems
+- **Code budget**: All enhancements must fit within the existing `src/main.js` file and remain under 100 lines of JavaScript total
+- **Performance floor**: Maintain 60fps on mid-range devices (no complex shadow calculations, no raymarching, no expensive per-frame operations)
+- **Vanilla JavaScript only**: No frameworks, no build-time transforms beyond Vite's defaults
 
-**Code Budget**
-- Total JavaScript in `src/main.js` must remain under 100 lines
-- No new JavaScript files or modules
-- Comments and whitespace count toward the 100-line limit
+### Design Boundaries
+- **Aesthetic preservation**: Dark background (0x1a1a2e) must remain; added elements should be subtle and avoid bright colors or harsh contrasts
+- **Minimal geometry**: Ground plane for shadows is permitted, but no additional decorative meshes, no skyboxes, no complex shadow receivers
+- **Interaction subtlety**: Mouse-driven effects should enhance rather than dominate — no dramatic camera movements, no disorienting light flashes
 
-**Performance**
-- Maintain 60fps on modern desktop browsers (Chrome, Firefox, Safari)
-- Shadow rendering must not introduce visible frame drops
-- Mouse tracking must use RAF-throttled updates, not raw mousemove events
+### Functional Boundaries
+- **Preserve existing behavior**: OrbitControls must continue to function normally; window resize handling must remain intact; initial camera position and scene composition should not change
+- **No framework coupling**: Solution should not require refactoring toward any particular pattern (MVC, component-based, etc.)
 
-**Visual Continuity**
-- Preserve the dark background color (0x1a1a2e)
-- Maintain the existing cube, diamond, and sphere geometry
-- Lighting changes must be subtle — no dramatic intensity shifts or color changes
-- Ground plane must be dark and low-contrast to avoid visual distraction
-
-**Architecture**
-- Window resize handling must continue to work correctly
-- OrbitControls must remain the primary camera interaction method
-- Scene setup order must not break existing rendering pipeline
+### Non-Goals
+- Advanced lighting systems (HDR, image-based lighting, light probes)
+- Physics simulation or collision detection
+- Post-processing effects (bloom, depth of field, motion blur)
+- Sound integration or data visualization features
+- Multi-scene management or scene transitions
 
 ## Acceptance Boundaries
 
-**Motion Quality**
-- **Minimum:** Cube rotates on its original axes, diamond rotates on at least one different axis, sphere position changes over time
-- **Target:** Diamond rotation is visually distinct from cube (different axis combination), sphere completes one full orbit in 15-30 seconds at a radius of 3-5 units
-- **Ideal:** All three motion systems feel harmonious and intentional, with easing or variation that makes movement organic rather than mechanical
+### Motion Choreography
+- **Diamond rotation**: Rotates on a visibly different axis than the cube (e.g., if cube rotates on X/Y, diamond should rotate on Y/Z or Z/X) at a speed that creates visual distinction without competing for attention
+- **Sphere orbital motion**: Traces a circular path around the scene center with radius between 2-4 units, completing one orbit every 10-15 seconds, height should vary slightly (±0.5 units) to add depth
+- **Coordination**: All three objects should move simultaneously without frame drops; motion should feel synchronized rather than random
 
-**Light Interaction**
-- **Minimum:** DirectionalLight position or intensity responds to mouse cursor position somewhere in the viewport
-- **Target:** Light response is smooth (no jitter), with a noticeable but non-distracting effect on scene appearance, using normalized mouse coordinates
-- **Ideal:** Light direction shifts create a sense of the scene being "explored" by the cursor, with subtle highlighting that draws attention to geometry edges
+### Mouse Interaction
+- **Light response**: Directional light position or intensity shifts based on mouse position within the canvas bounds (not globally)
+- **Response speed**: Light changes should be smoothed (lerped) over 3-5 frames to avoid jittery motion
+- **Boundary behavior**: Effect should gracefully handle edge cases (mouse leaving canvas, rapid movement, touch devices)
+- **Threshold**: Light shift magnitude should be noticeable when moving mouse from corner to corner but subtle enough to not feel distracting
 
-**Shadow Implementation**
-- **Minimum:** Renderer has `shadowMap.enabled = true`, at least one object casts shadows, ground plane receives shadows
-- **Target:** All three objects (cube, diamond, sphere) cast shadows onto a ground plane positioned below y=0, shadows are visible and correctly positioned, ground plane is dark (e.g., 0x0a0a0a) and does not compete with background
-- **Ideal:** Shadow softness (via `shadowMap.type`) and light shadow camera settings create believable depth, ground plane size and position feel natural, no shadow acne or peter-panning artifacts
+### Shadow Quality
+- **Renderer configuration**: Shadows enabled with appropriate shadow map size (1024x1024 or 2048x2048)
+- **Shadow casters**: Cube, diamond, and sphere all cast shadows
+- **Shadow receiver**: Ground plane present (PlaneGeometry or similar, positioned below objects, dark material matching aesthetic)
+- **Visual quality**: Shadows should be soft-edged (not harsh pixel boundaries) and update in real-time with motion
+- **Performance**: Shadow rendering must not drop framerate below 60fps on target hardware
 
-**Code Efficiency**
-- **Minimum:** Total line count in `src/main.js` is ≤100 lines
-- **Target:** Code remains readable with logical grouping (setup, animation, interaction), no excessive cleverness or golfing
-- **Ideal:** Implementation demonstrates clean patterns that could be extended by other developers without refactoring
-
-**Cross-System Coherence**
-- **Minimum:** OrbitControls continue to function, window resize still works, scene renders without console errors
-- **Target:** Mouse interaction does not interfere with OrbitControls dragging, all new features activate correctly on page load
-- **Ideal:** The enhancement feels integrated rather than bolted-on, with no perceptible initialization flicker or setup delays
+### Integration Quality
+- **Code organization**: New logic integrated logically within existing structure (motion in animation loop, setup in initialization)
+- **No regressions**: All orbit 1 and orbit 2 features (rotating cube, multiple shapes, lighting) continue to function
+- **Maintainability**: Code remains readable with clear variable names; no clever hacks that obscure intent
 
 ## Trust Tier Assignment
 
 **Assigned Tier:** Tier 2 (Supervised)
 
-**Rationale:**  
-This orbit modifies the core animation loop and renderer configuration in a small codebase with no test coverage. While the blast radius is limited (a demo project with no production users), the 100-line constraint creates pressure to optimize aggressively, which increases the risk of subtle bugs in event handling or render cycle timing. Shadow configuration often introduces visual artifacts that require iteration to resolve, and mouse interaction can conflict with OrbitControls if not implemented carefully. The lack of existing patterns for interaction in the codebase means the implementation establishes new conventions. Supervised execution allows verification that shadows render correctly, motion feels intentional, and OrbitControls remain unaffected before committing. A human checkpoint prevents merging code that technically meets requirements but produces jarring visual results or introduces frame rate issues.
+**Rationale:**
+This orbit introduces multiple interacting systems (shadow rendering, coordinated animation timing, mouse-driven state changes) that could degrade user experience if implemented poorly. Specific risks include:
+
+- **Performance degradation**: Shadow calculations and per-frame light updates could drop framerate, especially on lower-end devices or when combined with OrbitControls interaction
+- **Motion design failure**: Poorly tuned animation speeds or radius values could make the scene feel chaotic rather than choreographed
+- **Interaction coupling bugs**: Mouse event handlers might interfere with OrbitControls or fail to clean up properly
+
+The blast radius is moderate: incorrect implementation won't break the build or corrupt data, but could result in a scene that's less engaging than the current state (negative user value). Manual review is warranted to verify:
+
+1. Motion patterns feel intentional and harmonious
+2. Mouse interaction enhances rather than distracts
+3. Performance remains acceptable across device profiles
+4. Shadow quality matches aesthetic expectations
+
+After successful review of this orbit's implementation patterns, similar visual enhancement orbits could potentially move to Tier 1 autonomy.
 
 ## Dependencies
 
-**Prior Orbit Context**  
-This orbit builds directly on Orbit 2 (commit `feb8e410-9390-453a-b597-a92938a16631`), which added the diamond and sphere geometry. The existing scene state includes:
-- A rotating cube with MeshStandardMaterial
-- A diamond (likely created via geometry manipulation)
-- A sphere (added as a third object)
-- OrbitControls already initialized and active
-- AmbientLight and DirectionalLight in the scene
-- A render loop using `requestAnimationFrame`
+### Prior Orbits
+- **Orbit 1** (Initial scene setup): This orbit depends on the foundational scene structure — camera, renderer, lights, animation loop, OrbitControls, and window resize handling must be in place and functional
+- **Orbit 2** (Additional shapes): This orbit extends motion to the diamond and sphere shapes introduced in orbit 2; those geometries must exist and be accessible in the scene graph
 
-**External Systems**  
-- Three.js OrbitControls module (already imported via `three/addons/controls/OrbitControls.js`)
-- Browser window resize event handling (already implemented)
+### External Systems
+- **Three.js shadow system**: Relies on Three.js built-in shadow mapping (requires `renderer.shadowMap.enabled`, light shadow properties, and `castShadow`/`receiveShadow` flags)
+- **Browser APIs**: 
+  - `requestAnimationFrame` for animation loop (already in use)
+  - `mousemove` event for interaction tracking (new dependency)
+  - `window.devicePixelRatio` for shadow map sizing considerations
 
-**Data Dependencies**  
-- Scene graph structure from prior orbit (references to `cube`, `diamond`, `sphere` objects must be accessible in animation loop)
-- Existing light references (DirectionalLight must be accessible for mouse interaction)
+### Data Dependencies
+- **Scene graph structure**: Requires references to cube, diamond, sphere, directionalLight, and camera objects in a scope accessible to the animation loop
+- **Time tracking**: May need to track elapsed time or frame delta for consistent orbital motion speed across different refresh rates
 
-**Assumptions**  
-- The current codebase is functional and renders correctly as of March 19, 2026
-- Vite dev server is the primary development environment
-- No external CSS or HTML changes are required (all polish is scene-level)
+### Known Risks
+- **Mouse event handler lifecycle**: If not properly managed, event listeners could accumulate on hot reload during development (Vite HMR); cleanup or guard logic may be necessary
+- **OrbitControls conflict**: Mouse position tracking for light effects runs parallel to OrbitControls' own mouse handling; implementation must ensure they don't interfere
+- **Shadow map resolution scaling**: Fixed shadow map sizes may look poor on high-DPI displays unless adjusted for `window.devicePixelRatio`
