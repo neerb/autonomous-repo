@@ -1,0 +1,1 @@
+Implementation complete. Enhanced src/main.js with differentiated object motion (diamond Y/Z rotation, sphere orbital path), interactive lighting responsive to mouse movement, and soft shadow rendering with a dark ground plane. All changes fit within 68 lines, maintaining the minimalist aesthetic while adding tactile polish to the scene.
