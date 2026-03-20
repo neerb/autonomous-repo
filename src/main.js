@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+// Mouse tracking state
+let mouseX = 0;
+let mouseY = 0;
+let targetLightX = 0;
+let targetLightY = 0;
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a2e);
 
@@ -21,6 +27,12 @@ directionalLight.position.set(5, 10, 7.5);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.width = 1024;
 directionalLight.shadow.mapSize.height = 1024;
+directionalLight.shadow.camera.left = -10;
+directionalLight.shadow.camera.right = 10;
+directionalLight.shadow.camera.top = 10;
+directionalLight.shadow.camera.bottom = -10;
+directionalLight.shadow.camera.near = 0.5;
+directionalLight.shadow.camera.far = 50;
 scene.add(directionalLight);
 
 const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
@@ -42,29 +54,23 @@ const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 sphere.castShadow = true;
 scene.add(sphere);
 
-const groundGeometry = new THREE.PlaneGeometry(30, 30);
-const groundMaterial = new THREE.MeshStandardMaterial({
-  color: 0x0a0a0f,
-  roughness: 0.8,
-  metalness: 0.2
+const groundGeometry = new THREE.PlaneGeometry(10, 10);
+const groundMaterial = new THREE.MeshStandardMaterial({ 
+  color: 0x0a0a0f, 
+  roughness: 0.8 
 });
-const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
-groundPlane.rotation.x = -Math.PI / 2;
-groundPlane.position.y = -3;
-groundPlane.receiveShadow = true;
-scene.add(groundPlane);
+const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -2;
+ground.receiveShadow = true;
+scene.add(ground);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-const clock = new THREE.Clock();
-
-let mouseX = 0, mouseY = 0;
 window.addEventListener('mousemove', (event) => {
   mouseX = (event.clientX / window.innerWidth) * 2 - 1;
   mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-  directionalLight.position.x = 5 + mouseX * 3;
-  directionalLight.position.z = 7.5 + mouseY * 3;
 });
 
 window.addEventListener('resize', () => {
@@ -75,16 +81,23 @@ window.addEventListener('resize', () => {
 
 function animate() {
   requestAnimationFrame(animate);
-  const elapsed = clock.getElapsedTime();
   
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
   
+  diamond.rotation.y += 0.015;
   diamond.rotation.z += 0.008;
-  diamond.rotation.x += 0.012;
   
-  sphere.position.x = Math.cos(elapsed * 0.6) * 2;
-  sphere.position.z = Math.sin(elapsed * 0.6) * 2;
+  const time = Date.now() * 0.0005; // ~12 second orbit
+  const orbitRadius = 3;
+  sphere.position.x = Math.cos(time) * orbitRadius;
+  sphere.position.z = Math.sin(time) * orbitRadius;
+  sphere.position.y = Math.sin(time * 2) * 0.3;
+  
+  targetLightX = mouseX * 2;
+  targetLightY = mouseY * 2;
+  directionalLight.position.x += (targetLightX - directionalLight.position.x) * 0.05;
+  directionalLight.position.y += (targetLightY - directionalLight.position.y) * 0.05;
   
   controls.update();
   renderer.render(scene, camera);
