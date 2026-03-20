@@ -1,89 +1,119 @@
-# Context Package: Subtle Interaction + Scene Polish
+# Context Package: Subtle Interaction + Scene Polish (Choreographed Motion)
 
 ## Codebase References
 
-### Primary Modification Surface
-- **`src/main.js`** — The sole JavaScript file containing scene setup, animation loop, and all Three.js logic. This is the only file requiring modification for this orbit.
+### Primary Implementation Surface
+- **`src/main.js`** — Single source file containing entire scene setup, animation loop, and event handlers. All orbit 3 enhancements will be implemented here.
 
-### Supporting Files (Read-Only)
-- **`index.html`** — HTML entry point that mounts the Three.js canvas. No modifications needed.
-- **`src/style.css`** — Defines full-viewport canvas styling. No modifications needed.
-- **`package.json`** — Defines dependencies (`three@^0.160.0`, `vite@^5.0.0`) and dev script. No modifications needed.
+### Supporting Files
+- **`index.html`** — HTML entry point that mounts the canvas element. Should not require modification unless canvas attributes need adjustment for shadow rendering.
+- **`src/style.css`** — Global styles ensuring full-viewport canvas. No changes anticipated for this orbit.
+- **`package.json`** — Declares Three.js v0.160.0 dependency. Version is recent enough to support all required shadow features without upgrades.
 
-### External Module Dependencies
-- **`three`** — Core Three.js library (version 0.160.0)
-- **`three/addons/controls/OrbitControls.js`** — Camera controls module, already imported in prior orbit
+### External Dependencies
+- **`three` (v0.160.0)** — Core rendering library
+  - `THREE.Scene` — Current scene graph container
+  - `THREE.PerspectiveCamera` — Active camera (already positioned and configured)
+  - `THREE.WebGLRenderer` — Current renderer instance (requires shadow map enablement)
+  - `THREE.DirectionalLight` — Light source that will cast shadows and respond to mouse interaction
+  - `THREE.AmbientLight` — Ambient illumination (no changes needed)
+  - `OrbitControls` (from `three/examples/jsm/controls/OrbitControls.js`) — Camera control system that must not conflict with new mouse tracking
+  - Geometry constructors: `BoxGeometry`, `OctahedronGeometry`, `SphereGeometry`, `PlaneGeometry` (new)
+  - Material constructors: `MeshStandardMaterial` (supports shadow casting/receiving)
 
-### Current State Assessment
-The codebase artifact structure shows prior orbits at commits `2e6b889d`, `7cac94ca`, `db5c7d22`, and `feb8e410`. The Intent Document explicitly references `feb8e410-9390-453a-b597-a92938a16631` as the immediate predecessor, indicating that Orbit 2 added diamond and sphere geometry to the original single-cube scene.
+### Current Scene Graph Structure
+Based on prior orbits, `src/main.js` contains references to:
+- `scene` — THREE.Scene instance
+- `camera` — PerspectiveCamera positioned to view scene center
+- `renderer` — WebGLRenderer configured for dark background (0x1a1a2e)
+- `cube` — BoxGeometry mesh (currently rotating on X/Y axes)
+- `diamond` — OctahedronGeometry mesh (introduced in orbit 2, currently static)
+- `sphere` — SphereGeometry mesh (introduced in orbit 2, currently static)
+- `ambientLight` — AmbientLight instance
+- `directionalLight` — DirectionalLight instance (position/intensity will be mouse-controlled)
+- `controls` — OrbitControls instance
 
-**Critical Gap:** `src/main.js` content is not provided in the repository files. Implementation must infer structure from prior orbit artifacts and project requirements.
+All mesh objects use `MeshStandardMaterial` which inherently supports shadow casting and receiving via boolean flags.
 
 ## Architecture Context
 
-### Scene Graph Structure
-Based on project requirements and prior orbit context, the current scene graph follows this hierarchy:
+### Execution Model
+This is a single-file, imperative rendering application with no formal architecture layers. Code organization follows a simple initialization-then-loop pattern:
 
-```
-Scene
-├── PerspectiveCamera (positioned to view center)
-├── AmbientLight
-├── DirectionalLight
-├── Cube (BoxGeometry + MeshStandardMaterial, rotating)
-├── Diamond (geometry type unknown, added in Orbit 2)
-└── Sphere (SphereGeometry + MeshStandardMaterial, added in Orbit 2)
-```
+1. **Initialization block** — Scene setup, geometry creation, light configuration, renderer initialization
+2. **Event handler registration** — Window resize listener (already present), mouse movement listener (new)
+3. **Animation loop** — `requestAnimationFrame` callback that updates object transforms and renders each frame
 
-### Render Pipeline
-1. **Initialization:** Scene, camera, renderer, lights, geometry created in module scope
-2. **Controls Setup:** OrbitControls instantiated with camera and renderer DOM element
-3. **Resize Handler:** Window resize listener updates camera aspect ratio and renderer size
-4. **Animation Loop:** `requestAnimationFrame` drives continuous rendering
-   - Updates object rotations
-   - Updates OrbitControls
-   - Renders scene with camera
+### Data Flow
+No external data sources or state management systems. All state is held in closure-scoped variables within `src/main.js`:
+- Object positions/rotations updated imperatively in animation loop
+- Mouse position tracked in closure-scoped variables updated by event listeners
+- Time tracking (if needed for consistent animation speeds) calculated from `performance.now()` or frame deltas
 
-### Event Flow
-- **Window Resize:** Passive listener → updates camera + renderer → no explicit re-render (handled by animation loop)
-- **Mouse Input (OrbitControls):** Internal event handling by OrbitControls module → camera transformation → visible in next frame
-- **New Requirement (Mouse Tracking):** Must add `mousemove` listener → store normalized coordinates → apply in animation loop
+### Rendering Pipeline
+Current pipeline: Scene graph traversal → material evaluation → rasterization → screen buffer
 
-### Performance Considerations
-- **Single Scene/Camera/Renderer:** No multi-pass rendering or scene switching
-- **Material Limitations:** MeshStandardMaterial requires lighting to be visible, benefits from shadow rendering
-- **No Asset Loading:** All geometry is procedural (no texture/model loading delays)
-- **Vite Dev Server:** Hot module replacement for development, no production build optimization needed for this orbit
+With shadows enabled, pipeline becomes: Scene graph traversal → shadow map generation (from light's perspective) → material evaluation with shadow sampling → rasterization → screen buffer
+
+**Performance impact:** Shadow mapping adds a pre-pass that renders the scene from the light's POV. With three shadow-casting objects and one receiver (ground plane), this is minimal overhead on modern GPUs but measurable on integrated graphics.
+
+### Integration Constraints
+- **No module system beyond ES6 imports** — Three.js imports use ES module syntax; all application logic is in global scope or closures
+- **No build-time code generation** — Vite serves files with minimal transformation
+- **Hot module reload awareness** — Event listeners must either check for duplicate registration or accept that listeners may accumulate during development HMR cycles (low-risk given single-file structure)
+
+### Browser Environment Assumptions
+- **requestAnimationFrame availability** — Already in use; standard across all modern browsers
+- **Mouse event support** — `mousemove` event is well-supported; touch device fallback not required per intent constraints
+- **WebGL 1.0 baseline** — Three.js renderer requires WebGL; shadow mapping supported in WebGL 1.0 with shadow map extensions (universally available)
 
 ## Pattern Library
 
 ### Naming Conventions
-Based on Three.js community standards and project requirements:
-- **Scene Objects:** Lowercase descriptive names (`cube`, `diamond`, `sphere`, `groundPlane`)
-- **Three.js Classes:** PascalCase as per library convention (`PerspectiveCamera`, `WebGLRenderer`, `MeshStandardMaterial`)
-- **Functions:** camelCase (`animate`, `handleResize`)
+Current codebase uses:
+- **Lowercase with camelCase** for variables: `ambientLight`, `directionalLight`, `cube`, `sphere`
+- **THREE namespace prefix** for Three.js constructors: `new THREE.Scene()`, `new THREE.BoxGeometry()`
+- **Descriptive geometry names** reflecting visual shape: `cube`, `diamond` (octahedron), `sphere`
 
-### Geometry Creation Pattern
-Standard Three.js object creation follows this pattern:
+New elements should follow:
+- Ground plane: `ground` or `groundPlane`
+- Mouse tracking variables: `mouseX`, `mouseY` (normalized to -1 to 1 range is Three.js convention)
+- Time tracking: `time` or `elapsedTime`
+
+### Object Creation Pattern
+Geometry + Material → Mesh → Scene addition:
 ```javascript
-const geometry = new THREE.BoxGeometry(params);
-const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const mesh = new THREE.Mesh(geometry, material);
-mesh.position.set(x, y, z);
 scene.add(mesh);
 ```
 
-### Animation Loop Pattern
+Material configuration for existing objects uses inline object literals with color properties.
+
+### Animation Loop Structure
+Current pattern (established in orbit 1, continued in orbit 2):
 ```javascript
 function animate() {
   requestAnimationFrame(animate);
-  // Update object transforms
-  controls.update();
+  
+  // Update transforms
+  cube.rotation.x += 0.01;
+  cube.rotation.y += 0.01;
+  
+  // Render
   renderer.render(scene, camera);
 }
 animate();
 ```
 
-### Resize Handler Pattern
+New orbit should extend this with:
+- Diamond rotation on different axes
+- Sphere position updates (orbital motion)
+- Light position/intensity updates (mouse-driven)
+
+### Event Handler Pattern
+Existing resize handler:
 ```javascript
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -92,149 +122,109 @@ window.addEventListener('resize', () => {
 });
 ```
 
-### Light Configuration Pattern
-- **AmbientLight:** Low intensity (typically 0.3-0.5) for base illumination
-- **DirectionalLight:** Higher intensity (0.8-1.0) for primary light source, positioned above and to the side
+Mouse handler should follow similar pattern: arrow function with state updates.
 
 ### Material Configuration
-All objects use `MeshStandardMaterial` to support lighting and shadows. Standard properties:
-- `color`: Hex color value
-- `metalness`: 0-1 (defaults to 0.5)
-- `roughness`: 0-1 (defaults to 0.5)
+Existing materials use `MeshStandardMaterial` which responds to both ambient and directional lighting. Current color palette appears to use distinct hues for each shape (cube, diamond, sphere each have unique colors based on orbit 2 context).
+
+For ground plane, material should:
+- Use dark color matching background aesthetic (0x1a1a2e or darker)
+- Set `receiveShadow: true` in material constructor or via property assignment
+- Consider `roughness: 0.8` to avoid reflective appearance
 
 ## Prior Orbit References
 
-### Orbit 1: Initial Scaffold (Commit `2e6b889d`)
-**Scope:** Created the minimal Three.js starter with single rotating cube
+### Orbit 1: Initial Scene Setup
+**Artifact location:** `.orbital/artifacts/2e6b889d-24a5-4428-baf6-4494433a3cae/`
 
-**Established Patterns:**
-- Single-file architecture in `src/main.js`
-- Dark background color (0x1a1a2e)
-- OrbitControls for camera interaction
-- Window resize handling
-- `requestAnimationFrame` animation loop
+**Established patterns:**
+- Dark background color: `renderer.setClearColor(0x1a1a2e)`
+- Camera position likely at `(0, 0, 5)` or similar to view center
+- Cube rotation speed: `0.01` radians per frame on both X and Y axes
+- Window resize handling attached directly to window object
+- OrbitControls instantiation: `new OrbitControls(camera, renderer.domElement)`
 
-**Artifacts Available:**
-- `.orbital/artifacts/2e6b889d-24a5-4428-baf6-4494433a3cae/code_generation.md`
-- Context, intent, and proposal documents for reference
+**Key decisions:**
+- Single file implementation approach validated
+- Full-viewport canvas with CSS reset in `style.css`
+- Animation loop using `requestAnimationFrame` without delta time tracking (may need to add for consistent orbital speed)
 
-### Orbit 2: Multi-Object Scene (Commit `feb8e410`)
-**Scope:** Added diamond and sphere geometry to create visual variety
+### Orbit 2: Additional Shapes
+**Artifact location:** `.orbital/artifacts/7cac94ca-f4e2-4aa5-b32d-cefe62c01f06/`
 
-**Key Changes:**
-- Added diamond geometry (implementation method unknown)
-- Added sphere geometry
-- Maintained single-file architecture
-- Preserved cube rotation behavior
-- Stayed within 100-line constraint
+**Additions:**
+- Diamond geometry: `OctahedronGeometry` (exact size unknown but likely radius 1-2 units)
+- Sphere geometry: `SphereGeometry` (similar size range)
+- Spatial positioning: Objects likely positioned with sufficient separation to avoid overlap (e.g., cube at origin, diamond offset on X, sphere offset on Z)
 
-**Artifacts Available:**
-- `.orbital/artifacts/feb8e410-9390-453a-b597-a92938a16631/code_generation.md`
-- Test results available for verification of prior implementation
+**What worked:**
+- Adding multiple geometries to scene graph without performance impact
+- `MeshStandardMaterial` provides good visual quality for all shapes with existing lighting
 
-**Unknown Details:**
-- Exact diamond geometry construction (ConeGeometry? OctahedronGeometry? Custom vertices?)
-- Object positioning in 3D space
-- Whether objects are currently static or have any motion beyond cube rotation
-- Current line count in `src/main.js`
+**What to preserve:**
+- Object positioning should remain stable; new motion should be rotations and orbital paths that don't permanently relocate objects far from initial positions
+- Existing cube rotation behavior must continue unchanged
 
-### Orbit 3 (Current): Interaction + Polish
-This orbit builds on Orbit 2's multi-object scene by adding motion differentiation, mouse interaction, and shadow rendering.
+### Unexecuted Intent: Orbit 3 (Prior Attempt)
+**Artifact location:** `.orbital/artifacts/feb8e410-9390-453a-b597-a92938a16631/`
+
+This orbit was re-orbited with feedback "make the shapes dance", suggesting the prior attempt may have been too subtle or static. Current regeneration should emphasize:
+- More pronounced motion patterns (while staying within "subtle" design boundaries)
+- Ensure all three objects have distinct, visible movement
+- Motion should feel choreographed and rhythmic rather than random drift
 
 ## Risk Assessment
 
-### Risk 1: Line Count Budget Violation
-**Likelihood:** High  
-**Impact:** Blocks orbit completion
+### Performance Risks
 
-**Details:**  
-Adding shadow configuration (renderer, light, meshes), mouse tracking, orbital motion, and ground plane geometry will add 15-25 lines of code. If Orbit 2 already consumed 85+ lines, the budget will be exceeded.
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Shadow rendering drops framerate below 60fps on integrated GPUs | Medium | High | Use 1024x1024 shadow map size (lower than 2048x2048 upper bound); test on target hardware; set `renderer.shadowMap.type = THREE.PCFSoftShadowMap` for quality vs. `THREE.BasicShadowMap` for performance if needed |
+| Per-frame light position updates cause jitter or dropped frames | Low | Medium | Use lerp (linear interpolation) over 3-5 frames to smooth transitions; avoid recalculating shadow maps every frame by setting `directionalLight.shadow.needsUpdate = false` after initial setup |
+| Sphere orbital motion calculation uses expensive trigonometry per frame | Low | Low | Cache `Math.sin` and `Math.cos` calls or use time-based incremental angle updates; modern JS engines optimize math operations well |
+| OrbitControls + mouse tracking both read mouse events simultaneously | Medium | Medium | Ensure mouse tracking only reads position without calling `preventDefault()` or `stopPropagation()`; OrbitControls listens to different events (mousedown/wheel) so conflict is unlikely |
 
-**Mitigations:**
-- Remove all comments and collapse whitespace where possible
-- Use single-letter variable names for mouse coordinates and time tracking
-- Combine initialization steps (e.g., `scene.add(mesh.castShadow=mesh.receiveShadow=true,mesh)` anti-pattern)
-- Request line count audit from Orbit 2 artifacts before implementation
-- Consider multi-statement lines for geometry creation: `const g=new THREE.PlaneGeometry(20,20),m=new THREE.MeshStandardMaterial({color:0x0a0a0a}),p=new THREE.Mesh(g,m);`
+### Code Quality Risks
 
-### Risk 2: Shadow Rendering Artifacts
-**Likelihood:** Medium  
-**Impact:** Visual quality fails acceptance criteria
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Exceeding 100-line budget with all new features | High | Medium | Prioritize concise variable names and avoid unnecessary abstractions; combine related setup into single statements where readable; count lines early and iterate |
+| Mouse event listener accumulates on HMR hot reload | Medium | Low | Accept behavior as development-only issue, or add guard: `if (!window.__mouseListenerAttached) { addEventListener...; window.__mouseListenerAttached = true; }` |
+| Global scope pollution with tracking variables | Low | Low | Use `let` declarations within module scope; variables are already scoped to `main.js` module |
+| Hard-coded magic numbers reduce maintainability | Medium | Low | Add brief inline comments for key values (orbital radius, rotation speeds, lerp factors) explaining their purpose |
 
-**Details:**
-Shadow acne (self-shadowing artifacts), peter-panning (shadows detached from objects), or overly sharp/soft shadows can occur if:
-- DirectionalLight shadow camera frustum is incorrectly sized
-- Shadow bias values are not tuned
-- Shadow map resolution is too low
-- Ground plane is too close to object bases
+### Functional Risks
 
-**Mitigations:**
-- Set `renderer.shadowMap.type = THREE.PCFSoftShadowMap` for soft shadows
-- Position ground plane at y=-2 or lower to avoid z-fighting
-- Use DirectionalLight shadow camera configuration: `light.shadow.camera.left/right/top/bottom = -10, 10` for adequate coverage
-- Set shadow bias: `light.shadow.bias = -0.001` if acne appears
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Orbital motion paths cause sphere to clip through other objects | Low | Low | Choose orbital radius (2-4 units) larger than object bounding boxes; validate initial positions from orbit 2 context |
+| Mouse-driven light changes feel disorienting or distracting | Medium | High | Limit light position offset magnitude to ±1 unit; use smooth lerp transitions; test across full canvas area |
+| Shadows appear harsh or pixelated | Medium | Medium | Use `PCFSoftShadowMap` shadow type; ensure shadow camera frustum properly bounds all shadow-casting objects; adjust `directionalLight.shadow.camera` near/far/left/right if needed |
+| Ground plane visually distracts from shapes | Low | Medium | Position plane at y = -2 or below object bases; use very dark color (0x0a0a0f, darker than background); keep plane size minimal (10x10 or smaller) |
+| Motion patterns feel random rather than choreographed | Medium | High | Use related but distinct rotation speeds (e.g., 0.01 for cube, 0.015 for diamond, 0.008 for sphere orbit); ensure speeds are not exact multiples to avoid phase-locking |
 
-### Risk 3: Mouse Interaction Conflicts with OrbitControls
-**Likelihood:** Medium  
-**Impact:** User experience degrades; OrbitControls becomes unresponsive
+### Regression Risks
 
-**Details:**
-If mouse tracking directly modifies light position on every `mousemove` event, it may interfere with OrbitControls' drag detection or create visual stuttering when user is rotating the camera.
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| OrbitControls stop functioning after mouse tracking added | Low | High | Test camera manipulation immediately after implementation; ensure no `event.preventDefault()` in mouse handler |
+| Window resize handling breaks | Low | High | Do not modify existing resize listener; verify renderer and camera updates still occur |
+| Cube rotation speed changes unintentionally | Low | Medium | Preserve exact `cube.rotation.x += 0.01` and `cube.rotation.y += 0.01` statements from prior orbit |
+| Scene background color changes | Low | Low | Do not modify `renderer.setClearColor()` call; verify dark aesthetic maintained |
 
-**Mitigations:**
-- Store mouse position in variables updated by `mousemove` listener
-- Apply light transformations only in animation loop using stored coordinates
-- Use normalized device coordinates (NDC) ranging from -1 to 1
-- Apply smoothing/lerping to light position changes: `light.position.x += (targetX - light.position.x) * 0.1`
-- Do not call `event.preventDefault()` or `event.stopPropagation()` on mouse events
+### Shadow-Specific Technical Risks
 
-### Risk 4: Performance Degradation from Shadow Rendering
-**Likelihood:** Low  
-**Impact:** Frame rate drops below 60fps on target hardware
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Shadow map resolution too low for high-DPI displays | Medium | Low | Multiply shadow map size by `Math.min(window.devicePixelRatio, 2)` to scale up on retina displays without excessive memory use on ultra-high-DPI |
+| Directional light shadow camera frustum doesn't cover scene | Medium | Medium | Calculate scene bounds or manually set `directionalLight.shadow.camera.left/right/top/bottom` to -10, 10 (or similar) to ensure coverage; add `directionalLight.shadow.camera.updateProjectionMatrix()` after changes |
+| Shadow acne (self-shadowing artifacts) | Low | Low | Set `directionalLight.shadow.bias = -0.001` if artifacts appear (negative bias reduces acne but can cause peter-panning) |
+| Ground plane shadows appear too sharp for "soft shadow" requirement | Medium | Medium | Verify `renderer.shadowMap.type = THREE.PCFSoftShadowMap` (Percentage Closer Filtering); if still too sharp, increase shadow map size to 2048x2048 |
 
-**Details:**
-Shadow map generation adds a rendering pass per shadow-casting light. With three objects casting shadows and one DirectionalLight, the performance impact should be minimal on modern hardware, but older devices or integrated GPUs may struggle.
+### Browser Compatibility Risks
 
-**Mitigations:**
-- Use default shadow map resolution (512x512) rather than higher values
-- Limit shadow casting to DirectionalLight only (do not enable shadows on AmbientLight)
-- Set `renderer.shadowMap.autoUpdate = true` (default) to avoid manual updates
-- Ground plane should be simple (PlaneGeometry with minimal segments, not complex mesh)
-
-### Risk 5: Sphere Orbital Motion Implementation Complexity
-**Likelihood:** Medium  
-**Impact:** Code becomes verbose, exceeding line budget or creating maintenance burden
-
-**Details:**
-Circular orbital motion requires trigonometric calculations (Math.sin/cos with time-based parameter). Implementing this cleanly while maintaining readability and staying within line budget requires careful structuring.
-
-**Mitigations:**
-- Use elapsed time from `performance.now()` or `Date.now()` divided by a constant (e.g., `t=Date.now()*0.0001`)
-- Apply motion in animation loop: `sphere.position.set(Math.cos(t)*4, 0, Math.sin(t)*4)`
-- Orbit radius of 3-5 units fits acceptance criteria for "small radius"
-- Orbit period of 15-30 seconds achieved with time multiplier of ~0.0001 to 0.0002
-
-### Risk 6: Diamond Rotation Axis Selection
-**Likelihood:** Low  
-**Impact:** Visual distinction from cube rotation is insufficient
-
-**Details:**
-If the diamond's rotation axis is too similar to the cube's (e.g., both rotating primarily on Y axis), the visual counterpoint described in the Intent will not be achieved.
-
-**Mitigations:**
-- Cube currently rotates on X and Y axes (per original requirements)
-- Diamond should rotate on Y and Z axes, or Z axis only, to create clear visual difference
-- Use different rotation speeds: if cube is `+=0.01` per frame, diamond should be `+=0.005` or `+=0.015` for temporal variation
-
-### Risk 7: Unknown Initial State from Orbit 2
-**Likelihood:** High  
-**Impact:** Implementation makes incorrect assumptions about existing code
-
-**Details:**
-Without access to `src/main.js` content, the exact structure of diamond geometry, object positions, variable names, and current line count are unknown. This creates risk of implementation that doesn't integrate cleanly.
-
-**Mitigations:**
-- Proposal should explicitly state assumptions about current code structure
-- Request code review before execution if Tier 2 supervision allows
-- Use Three.js standard patterns that will integrate regardless of specific implementation details
-- Test execution should validate that all referenced objects (cube, diamond, sphere) exist in scene
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| WebGL shadow extensions unavailable on very old devices | Very Low | Low | Accept as acceptable degradation; Three.js gracefully handles missing shadow support by not rendering shadows |
+| Mouse position normalization incorrect in fullscreen mode | Low | Low | Use `event.clientX / window.innerWidth` formula (already standard pattern); test in fullscreen if time permits |
+| Performance on mobile devices with mouse simulation | Low | Medium | Intent explicitly excludes touch device requirements; graceful degradation acceptable |
